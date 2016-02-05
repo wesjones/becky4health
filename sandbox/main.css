@@ -1,0 +1,76 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #efefef;
+}
+.main-form {
+  margin: 20px;
+}
+.main-form .main-card-wide {
+  width: 100%;
+  margin-bottom: 20px;
+}
+.main-form .mdl-textfield {
+  min-width: 150px;
+  width: calc(50% - 40px);
+  max-width: 250px;
+  margin-left: 20px;
+}
+.main-form .mdl-textfield.mdl-textfield-mini {
+  min-width: 40px;
+  width: 40px;
+  max-width: 40px;
+}
+.main-form .mdl-textfield.mdl-textfield-mini input {
+  width: 40px;
+}
+.main-form .mdl-textfield.mdl-textfield-sml {
+  min-width: 100px;
+  width: 100px;
+  max-width: 100px;
+}
+.main-form .mdl-textfield.mdl-textfield-sml input {
+  width: 100px;
+}
+.main-form .mdl-textfield.mdl-textfield-med {
+  min-width: 150px;
+  width: 150px;
+  max-width: 150px;
+}
+.main-form .mdl-textfield.mdl-textfield-med input {
+  width: 150px;
+}
+.main-form .mdl-textfield.mdl-textfield-long {
+  min-width: 0;
+  width: calc(100% - 40px);
+  max-width: 400px;
+}
+.main-form .mdl-textfield.mdl-textfield-long input {
+  width: 100%;
+}
+.main-form .mdl-textfield.mdl-textfield-full {
+  min-width: 0;
+  width: calc(100% - 40px);
+  max-width: calc(100% - 40px);
+}
+.main-form .mdl-textfield.mdl-textfield-full input {
+  width: 100%;
+}
+.main-form .subtext {
+  font-size: 11px;
+}
+.main-form .mdl-radio {
+  margin: 0 6px 0 0;
+}
+@media only screen and (max-width: 500px) {
+  .main-form {
+    margin: 10px;
+  }
+  .main-form .mdl-textfield {
+    width: calc(48% - 20px);
+    min-width: 100px;
+  }
+}

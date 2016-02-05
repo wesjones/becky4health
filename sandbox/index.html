@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Becky 4 Health Form</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,minimal-ui">
+    <meta name="apple-mobile-web-app-capable" content="YES">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" value="no translate">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.1.1/material.indigo-pink.min.css">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.1.1/material.cyan-orange.min.css"/>
+    <link rel="stylesheet" href="main.css">
+    <script src="../dist/widgets.js" account="" charset="utf-8"></script>
+</head>
+<body bh-app>
+<form class="main-form">
+    <div class="main-card-wide mdl-card mdl-shadow--2dp">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Tell me about yourself</h2>
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+            <div bh-input="model.profile.firstName"></div>
+            <div bh-input="model.profile.lastName"></div>
+            <div bh-input="model.profile.email"></div>
+            <div bh-input="model.profile.phone"></div>
+            <div bh-input="model.profile.age"></div>
+            <div bh-radio="model.profile.gender"></div>
+            <div bh-input="model.profile.weight"></div>
+            <div bh-input="model.profile.height"></div>
+            <div bh-input="model.profile.relationship"></div>
+            <div bh-input="model.profile.mailingAddress"></div>
+            <div bh-input="model.profile.city"></div>
+            <div bh-input="model.profile.state"></div>
+            <div bh-input="model.profile.zip"></div>
+        </div>
+    </div>
+
+    <div class="main-card-wide mdl-card mdl-shadow--2dp">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Health and Wellness</h2>
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+        </div>
+    </div>
+
+</form>
+<script>
+    bh.boot();
+</script>
+<script defer src="https://code.getmdl.io/1.1.1/material.min.js"></script>
+</body>
+</html>
