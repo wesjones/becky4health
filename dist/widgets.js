@@ -182,6 +182,55 @@
                                 pattern: "\\d{5}(\\-\\d+)?$",
                                 error: "Please enter your zipcode",
                                 classes: "mdl-textfield-sml"
+                            },
+                            childrenAges: {
+                                name: "childrenAges",
+                                label: "Children/Ages",
+                                pattern: "\\d+$",
+                                error: "Please enter your children's ages",
+                                classes: "mdl-textfield-sml"
+                            },
+                            pets: {
+                                name: "pets",
+                                label: "Pets",
+                                pattern: "\\d+$",
+                                error: "Please enter if you have pets",
+                                classes: "mdl-textfield-sml"
+                            },
+                            doYouSmoke: {
+                                name: "doYouSmoke",
+                                label: "Do you Smoke?",
+                                pattern: "\\d+$",
+                                error: "Please enter if you smoke",
+                                classes: "mdl-textfield-sml"
+                            },
+                            drinkAlcohol: {
+                                name: "drinkAlcohol",
+                                label: "Drink Alcohol?",
+                                pattern: "\\d+$",
+                                error: "Please enter if you drink alcohol",
+                                classes: "mdl-textfield-sml"
+                            },
+                            occupation: {
+                                name: "occupation",
+                                label: "Occupation",
+                                pattern: "\\d+$",
+                                error: "Please enter your occupation",
+                                classes: "mdl-textfield-sml"
+                            },
+                            hoursOfWorkPerWeek: {
+                                name: "HoursOfWorkPerWeek",
+                                label: "Hours of work per week",
+                                pattern: "\\d+$",
+                                error: "Please enter how many hours you work per week",
+                                classes: "mdl-textfield-sml"
+                            },
+                            whatPromptedYouToContactMe: {
+                                name: "whatPromptedYouToContactMe",
+                                label: "What prompted you to contact me?",
+                                pattern: "\\d+$",
+                                error: "Please enter how many hours you work per week",
+                                classes: "mdl-textfield-sml"
                             }
                         }
                     };
@@ -1335,7 +1384,7 @@
                 }
                 if (el) {
                     scope = el.scope || scope;
-                    var i = 0, len = el.children.length;
+                    var i = 0, len = el.children && el.children.length || 0;
                     while (i < len) {
                         if (!el.children[i].compiled) {
                             compile(el.children[i], scope);
