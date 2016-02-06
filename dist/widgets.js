@@ -229,7 +229,7 @@
                                 name: "whatPromptedYouToContactMe",
                                 label: "What prompted you to contact me?",
                                 pattern: "\\d+$",
-                                error: "Please enter how many hours you work per week",
+                                error: "Please say why you contacted me",
                                 classes: "mdl-textfield-sml"
                             }
                         }
