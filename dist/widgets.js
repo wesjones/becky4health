@@ -193,44 +193,87 @@
                             pets: {
                                 name: "pets",
                                 label: "Pets",
-                                pattern: "\\d+$",
-                                error: "Please enter if you have pets",
-                                classes: "mdl-textfield-sml"
+                                options: [ {
+                                    name: "no",
+                                    label: "No",
+                                    selected: true
+                                }, {
+                                    name: "yes",
+                                    label: "Yes"
+                                } ]
                             },
                             doYouSmoke: {
                                 name: "doYouSmoke",
                                 label: "Do you Smoke?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you smoke",
-                                classes: "mdl-textfield-sml"
+                                options: [ {
+                                    name: "no",
+                                    label: "No",
+                                    selected: true
+                                }, {
+                                    name: "yes",
+                                    label: "Yes"
+                                } ]
                             },
                             drinkAlcohol: {
                                 name: "drinkAlcohol",
                                 label: "Drink Alcohol?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you drink alcohol",
-                                classes: "mdl-textfield-sml"
+                                options: [ {
+                                    name: "no",
+                                    label: "No",
+                                    selected: true
+                                }, {
+                                    name: "yes",
+                                    label: "Yes"
+                                } ]
                             },
                             occupation: {
                                 name: "occupation",
                                 label: "Occupation",
                                 pattern: "\\d+$",
                                 error: "Please enter your occupation",
-                                classes: "mdl-textfield-sml"
+                                classes: "mdl-textfield-med"
                             },
                             hoursOfWorkPerWeek: {
                                 name: "HoursOfWorkPerWeek",
                                 label: "Hours of work per week",
                                 pattern: "\\d+$",
                                 error: "Please enter how many hours you work per week",
-                                classes: "mdl-textfield-sml"
+                                classes: "mdl-textfield-long"
                             },
                             whatPromptedYouToContactMe: {
                                 name: "whatPromptedYouToContactMe",
                                 label: "What prompted you to contact me?",
                                 pattern: "\\d+$",
                                 error: "Please say why you contacted me",
-                                classes: "mdl-textfield-sml"
+                                classes: "mdl-textfield-long"
+                            },
+                            inGeneralHowWouldYouRateYourOverallHealth: {
+                                name: "inGeneralHowWouldYouRateYourOverallHealth",
+                                label: "In general how would you rate your overall health",
+                                pattern: "\\d+$",
+                                error: "Please say why you contacted me",
+                                classes: "mdl-textfield-long"
+                            },
+                            mainHealthConcerns: {
+                                name: "mainHealthConcerns",
+                                label: "Main Health Concerns",
+                                pattern: "\\d+$",
+                                error: "Please say why you contacted me",
+                                classes: "mdl-textfield-long"
+                            },
+                            anyOtherConcerns: {
+                                name: "anyOtherConcerns",
+                                label: "Any other concerns",
+                                pattern: "\\d+$",
+                                error: "Please say why you contacted me",
+                                classes: "mdl-textfield-long"
+                            },
+                            anyAtWhatPointInYourLifeHaveYouFeltYourBestConcerns: {
+                                name: "anyAtWhatPointInYourLifeHaveYouFeltYourBestConcerns",
+                                label: "Any At What point in your life have you felt your bes concerns",
+                                pattern: "\\d+$",
+                                error: "Please say why you contacted me",
+                                classes: "mdl-textfield-long"
                             }
                         }
                     };
