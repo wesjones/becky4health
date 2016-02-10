@@ -244,35 +244,70 @@
                                 name: "whatPromptedYouToContactMe",
                                 label: "What prompted you to contact me?",
                                 pattern: "\\d+$",
-                                error: "Please say why you contacted me",
+                                error: "Please say why you contact me",
                                 classes: "mdl-textfield-long"
                             },
                             inGeneralHowWouldYouRateYourOverallHealth: {
                                 name: "inGeneralHowWouldYouRateYourOverallHealth",
                                 label: "In general how would you rate your overall health",
                                 pattern: "\\d+$",
-                                error: "Please say why you contacted me",
+                                error: "Please rate your overall health",
                                 classes: "mdl-textfield-long"
                             },
                             mainHealthConcerns: {
                                 name: "mainHealthConcerns",
                                 label: "Main Health Concerns",
                                 pattern: "\\d+$",
-                                error: "Please say why you contacted me",
+                                error: "Please enter your main health concerns",
                                 classes: "mdl-textfield-long"
                             },
                             anyOtherConcerns: {
                                 name: "anyOtherConcerns",
                                 label: "Any other concerns",
                                 pattern: "\\d+$",
-                                error: "Please say why you contacted me",
+                                error: "Please enter all your concerns",
                                 classes: "mdl-textfield-long"
                             },
-                            anyAtWhatPointInYourLifeHaveYouFeltYourBestConcerns: {
-                                name: "anyAtWhatPointInYourLifeHaveYouFeltYourBestConcerns",
-                                label: "Any At What point in your life have you felt your bes concerns",
+                            atWhatPointInYourLifeHaveYouFeltYourBest: {
+                                name: "atWhatPointInYourLifeHaveYouFeltYourBest",
+                                label: "At What point in your life have you felt your best",
                                 pattern: "\\d+$",
-                                error: "Please say why you contacted me",
+                                error: "Please etner the time that you have felt your best",
+                                classes: "mdl-textfield-long"
+                            },
+                            wellnessGoals: {
+                                name: "wellnessGoals",
+                                label: "Wellness Goals",
+                                pattern: "\\d+$",
+                                error: "Please enter your wellness goals",
+                                classes: "mdl-textfield-long"
+                            },
+                            howIsYourSleep: {
+                                name: "howIsYourSleep",
+                                label: "How is your sleep Goals",
+                                pattern: "\\d+$",
+                                error: "Please enter if you sleep good or not",
+                                classes: "mdl-textfield-long"
+                            },
+                            howManyHoursDoYouSleep: {
+                                name: "howManyHoursDoYouSleep",
+                                label: "How many hours do you sleep?",
+                                pattern: "\\d+$",
+                                error: "Please enter how many hours you sleep",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouWakeUpAtNight: {
+                                name: "doYouWakeUpAtNight",
+                                label: "Do you wake up at night?",
+                                pattern: "\\d+$",
+                                error: "Please enter if you wake up at night",
+                                classes: "mdl-textfield-long"
+                            },
+                            timeToBed: {
+                                name: "timeToBed",
+                                label: "Time to Bed",
+                                pattern: "\\d+$",
+                                error: "Please enter the time you usually go to bed",
                                 classes: "mdl-textfield-long"
                             }
                         }
