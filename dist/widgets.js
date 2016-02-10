@@ -272,7 +272,7 @@
                                 name: "atWhatPointInYourLifeHaveYouFeltYourBest",
                                 label: "At What point in your life have you felt your best",
                                 pattern: "\\d+$",
-                                error: "Please etner the time that you have felt your best",
+                                error: "Please enter the time that you have felt your best",
                                 classes: "mdl-textfield-long"
                             },
                             wellnessGoals: {
@@ -300,7 +300,7 @@
                                 name: "doYouWakeUpAtNight",
                                 label: "Do you wake up at night?",
                                 pattern: "\\d+$",
-                                error: "Please enter if you wake up at night",
+                                error: "Please enter if you wake up at night?",
                                 classes: "mdl-textfield-long"
                             },
                             timeToBed: {
@@ -308,6 +308,13 @@
                                 label: "Time to Bed",
                                 pattern: "\\d+$",
                                 error: "Please enter the time you usually go to bed",
+                                classes: "mdl-textfield-long"
+                            },
+                            timeWakeUp: {
+                                name: "timeWakeUp",
+                                label: "Time wake up",
+                                pattern: "\\d+$",
+                                error: "Please enter the time you usually wake up",
                                 classes: "mdl-textfield-long"
                             }
                         }
@@ -1462,7 +1469,7 @@
                 }
                 if (el) {
                     scope = el.scope || scope;
-                    var i = 0, len = el.children && el.children.length || 0;
+                    var i = 0, len = el.children.length;
                     while (i < len) {
                         if (!el.children[i].compiled) {
                             compile(el.children[i], scope);
