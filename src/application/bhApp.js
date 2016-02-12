@@ -230,6 +230,13 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 pattern: '\\d+$',
                                 error: "Please enter the time you usually wake up",
                                 classes: 'mdl-textfield-long'
+                            },
+                            howDoYouFeelWhenYouWakeUp: {
+                                name: 'howDoYouFeelWhenYouWakeUp',
+                                label: 'How do you feel when you wake up?',
+                                pattern: '\\d+$',
+                                error: "Please enter how you feel after you wake up",
+                                classes: 'mdl-textfield-long'
                             }
                         }
                     };

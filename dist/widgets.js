@@ -316,6 +316,13 @@
                                 pattern: "\\d+$",
                                 error: "Please enter the time you usually wake up",
                                 classes: "mdl-textfield-long"
+                            },
+                            howDoYouFeelWhenYouWakeUp: {
+                                name: "howDoYouFeelWhenYouWakeUp",
+                                label: "How do you feel when you wake up?",
+                                pattern: "\\d+$",
+                                error: "Please enter how you feel after you wake up",
+                                classes: "mdl-textfield-long"
                             }
                         }
                     };
@@ -1469,7 +1476,7 @@
                 }
                 if (el) {
                     scope = el.scope || scope;
-                    var i = 0, len = el.children.length;
+                    var i = 0, len = el.children && el.children.length || 0;
                     while (i < len) {
                         if (!el.children[i].compiled) {
                             compile(el.children[i], scope);
