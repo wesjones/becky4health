@@ -323,6 +323,34 @@
                                 pattern: "\\d+$",
                                 error: "Please enter how you feel after you wake up",
                                 classes: "mdl-textfield-long"
+                            },
+                            anyPainStiffnessOrSwelling: {
+                                name: "anyPainStiffnessOrSwelling",
+                                label: "Any Pain,Stiffness,or swelling?",
+                                pattern: "\\d+$",
+                                error: "Please enter if you have any pain stiffness or swelling",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatDoYouDoForIt: {
+                                name: "whatDoYouDoForIt",
+                                label: "What do you do for it?",
+                                pattern: "\\d+$",
+                                error: "Please enter what you do for it",
+                                classes: "mdl-textfield-long"
+                            },
+                            howIsYourDigestion: {
+                                name: "howIsYourDigestion",
+                                label: "How is your digestion?",
+                                pattern: "\\d+$",
+                                error: "Please enter how is your digestion",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouExperienceConstipationBloatingDiarrhea: {
+                                name: "doYouExperienceConstipationBloatingDiarrhea",
+                                label: "Do you experience Constipation,Bloating,Diarrhea?",
+                                pattern: "\\d+$",
+                                error: "Please enter if you have any of the listed above",
+                                classes: "mdl-textfield-long"
                             }
                         }
                     };
