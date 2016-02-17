@@ -265,6 +265,41 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 pattern: '\\d+$',
                                 error: "Please enter if you have any of the listed above",
                                 classes: 'mdl-textfield-long'
+                            },
+                            doYouHaveAllergiesOrSensitivities: {
+                                name: 'doYouHaveAllergiesOrSensitivities',
+                                label: 'Do you have Allergies or Sensitivities?',
+                                pattern: '\\d+$',
+                                error: "Please enter what allergies or sensitivities that you have",
+                                classes: 'mdl-textfield-long'
+                            },
+                            doYouTakeAnyMedicationSupplementsOrVitamins: {
+                                name: 'doYouTakeAnyMedicationSupplementsOrVitamins',
+                                label: 'Do you take any medication, supplements, or Vitamins?',
+                                pattern: '\\d+$',
+                                error: "Please enter if you take any medication listed above",
+                                classes: 'mdl-textfield-long'
+                            },
+                            howMuchStressDoYouHaveInYourLifeRigtNow: {
+                                name: 'howMuchStressDoYouHaveInYourLifeRigtNow',
+                                label: 'How much stress do you have in your life right now?(On a scale of 1-10)',
+                                pattern: '\\d+$',
+                                error: "Please enter the stress you have in your life now",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatIsYOurPrimaryStresserInYourLifeAtThisTime: {
+                                name: 'whatIsYOurPrimaryStresserInYourLifeAtThisTime',
+                                label: 'What is your primary stresser in your life at this time?',
+                                pattern: '\\d+$',
+                                error: "Please enter what is the primary stresser in your life now",
+                                classes: 'mdl-textfield-long'
+                            },
+                            howOftenDoYouFeelRelaxedOrAtPeace: {
+                                name: 'howOftenDoYouFeelRelaxedOrAtPeace',
+                                label: 'How Often do you feel relaxed or at peace?',
+                                pattern: '\\d+$',
+                                error: "Please enter how often you feel relaxed or at peace",
+                                classes: 'mdl-textfield-long'
                             }
                         }
                     };
