@@ -300,6 +300,41 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 pattern: '\\d+$',
                                 error: "Please enter how often you feel relaxed or at peace",
                                 classes: 'mdl-textfield-long'
+                            },
+                            mostOfTheTimeSometimesRarelyorNever: {
+                                name: 'mostOfTheTimeSometimesRarelyorNever',
+                                label: 'Most of the time, Sometimes, Rarely, or Never',
+                                pattern: '\\d+$',
+                                error: "Please enter if you feel stressed sometimes, rareley, or never",
+                                classes: 'mdl-textfield-long'
+                            },
+                            areYouBeingTreatedForAnyEmotionalOrPhysicalConditionAtThisTime: {
+                                name: 'areYouBeingTreatedForAnyEmotionalOrPhysicalConditionAtThisTime',
+                                label: 'Are you being treated for any emotional or physical condition at this time?',
+                                pattern: '\\d+$',
+                                error: "Please enter if you are being treated for any emotional or physical condition now",
+                                classes: 'mdl-textfield-long'
+                            },
+                            howIsYOurEnergyLevelThroughoutTheDay: {
+                                name: 'howIsYOurEnergyLevelThroughoutTheDay',
+                                label: 'How is your energy level throughout the day?',
+                                pattern: '\\d+$',
+                                error: "Please enter how your energy is during the day",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatGivesYouEnergy: {
+                                name: 'whatGivesYouEnergy',
+                                label: 'What gives you energy?',
+                                pattern: '\\d+$',
+                                error: "Please enter what gives you energy",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatZapsYouOfYourEnergy: {
+                                name: 'whatZapsYouOfYourEnergy',
+                                label: 'What zaps you of your energy?',
+                                pattern: '\\d+$',
+                                error: "Please enter what zaps you of your energy",
+                                classes: 'mdl-textfield-long'
                             }
                         }
                     };
