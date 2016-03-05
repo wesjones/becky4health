@@ -335,6 +335,34 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 pattern: '\\d+$',
                                 error: "Please enter what zaps you of your energy",
                                 classes: 'mdl-textfield-long'
+                            },
+                            doYouHaveAMorningRoutineThatYouPractice: {
+                                name: 'doYouHaveAMorningRoutineThatYouPractice',
+                                label: 'Do you have a morning routine that you practice?',
+                                pattern: '\\d+$',
+                                error: "Please enter what your morning routine is",
+                                classes: 'mdl-textfield-long'
+                            },
+                            doYouExercise: {
+                                name: 'doYouExercise',
+                                label: 'Do you exercise?',
+                                pattern: '\\d+$',
+                                error: "Please enter if you exercise or not",
+                                classes: 'mdl-textfield-long'
+                            },
+                            howSatisfiedAreYouWithYourExcerciseLevel: {
+                                name: 'howSatisfiedAreYouWithYourExcerciseLevel',
+                                label: 'How satisfied are you with your exercise level?',
+                                pattern: '\\d+$',
+                                error: "Please enter how satisfied you are with your exercise level",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatDoYouLikeToDoForPhysicalActivity: {
+                                name: 'whatDoYouLikeToDoForPhysicalActivity',
+                                label: 'How satisfied are you with your physical activity?',
+                                pattern: '\\d+$',
+                                error: "Please enter how satisfied you are with your physical activity",
+                                classes: 'mdl-textfield-long'
                             }
                         }
                     };
