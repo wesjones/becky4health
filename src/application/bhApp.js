@@ -363,6 +363,34 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 pattern: '\\d+$',
                                 error: "Please enter how satisfied you are with your physical activity",
                                 classes: 'mdl-textfield-long'
+                            },
+                            howSatisfiedAreYouWithYOurCurrentEatingAndNurtrition: {
+                                name: 'howSatisfiedAreYouWithYOurCurrentEatingAndNutrition',
+                                label: 'How Satisfied are you with your current eating and nutrition?',
+                                pattern: '\\d+$',
+                                error: "Please enter how your are with your eating and nutrition now",
+                                classes: 'mdl-textfield-long'
+                            },
+                            howSatisfiedAreYOuWithOurWeight: {
+                                name: 'howSatisfiedAreYouWithOurWeight',
+                                label: 'How Satisfied are you with your with or weight ',
+                                pattern: '\\d+$',
+                                error: "Please enter how your weight or with is satisfied",
+                                classes: 'mdl-textfield-long'
+                            },
+                            howSatisfiedAreYouWithYourLifeInGeneral: {
+                                name: 'HowSatisfiedAreYouWithYourLifeInGeneral',
+                                label: 'How Satisfied are your life in general ',
+                                pattern: '\\d+$',
+                                error: "Please enter how your life is in general",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatWouldYouLikeToDoToChangeForTheBetter: {
+                                name: 'whatWouldYouLikeToDoToChangeForTheBetter',
+                                label: 'What would you like to do to change for the better? ',
+                                pattern: '\\d+$',
+                                error: "Please enter what you would like to do to change for the better.",
+                                classes: 'mdl-textfield-long'
                             }
                         }
                     };
