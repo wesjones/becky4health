@@ -391,6 +391,55 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 pattern: '\\d+$',
                                 error: "Please enter what you would like to do to change for the better.",
                                 classes: 'mdl-textfield-long'
+                            },
+                            howWouldYouRateYourOverallSelfEsteem: {
+                                name: 'howWouldYouRateYourOverallSelfEsteem',
+                                label: 'How would you rate your overall Self-Esteem ',
+                                pattern: '\\d+$',
+                                error: "Please enter what you would rate your Self-Esteem?",
+                                classes: 'mdl-textfield-long'
+                            },
+                            ExcellentVeryGoodGoodFairOrPoor: {
+                                name: 'ExcellentVeryGoodGoodFairOrPoor',
+                                label: 'Excellent, Very Good, Good, Fair, or Poor?',
+                                pattern: '\\d+$',
+                                error: "Please enter one of these on how your are doing",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatPositiveQualitiesDoYouHaveThatWillHelpYouReachYourGoals: {
+                                name: 'whatPositiveQualitiesDoYouHaveThatWillHelpYouReachYourGoals',
+                                label: 'What positive qualities do you have that will help you reach your goals?',
+                                pattern: '\\d+$',
+                                error: "Please enter the qualities that will help you reach your goals",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatPositiveQualitiesWouldYouLikeToDevelop: {
+                                name: 'whatPositiveQualitiesWouldYouLikeToDevelop',
+                                label: 'What positive qualities would you like to develop?',
+                                pattern: '\\d+$',
+                                error: "Please enter the qualities that that you want to develop",
+                                classes: 'mdl-textfield-long'
+                            },
+                            ifMoneyOrTimeWereNotRelativehowWouldYouLikeToSpendYourTime: {
+                                name: 'ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime',
+                                label: 'If money or time wer not relative, how would you like to spend your time?',
+                                pattern: '\\d+$',
+                                error: "Please enter what you would do to this question",
+                                classes: 'mdl-textfield-long'
+                            },
+                            ifMoneyOrTimeWereNotRelativehowWouldYouLikeToSpendYourTime: {
+                                name: 'ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime',
+                                label: 'If money or time wer not relative, how would you like to spend your time?',
+                                pattern: '\\d+$',
+                                error: "Please enter what you would do to this question",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatIsTheHardestThingInLifeSoFarHaveYouHadToOvercome: {
+                                name: 'whatIsTheHardestThingInLifeSoFarHaveYouHadToOvercome',
+                                label: 'What is the hardest thing in life so far have you had to overcome?',
+                                pattern: '\\d+$',
+                                error: "Please enter what you would do to this question",
+                                classes: 'mdl-textfield-long'
                             }
                         }
                     };
