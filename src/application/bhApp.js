@@ -280,18 +280,18 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 error: "Please enter if you take any medication listed above",
                                 classes: 'mdl-textfield-long'
                             },
-                            howMuchStressDoYouHaveInYourLifeRigtNow: {
-                                name: 'howMuchStressDoYouHaveInYourLifeRigtNow',
+                            howMuchStressDoYouHaveInYourLifeRightNow: {
+                                name: 'howMuchStressDoYouHaveInYourLifeRightNow',
                                 label: 'How much stress do you have in your life right now?(On a scale of 1-10)',
                                 pattern: '\\d+$',
                                 error: "Please enter the stress you have in your life now",
                                 classes: 'mdl-textfield-long'
                             },
-                            whatIsYOurPrimaryStresserInYourLifeAtThisTime: {
-                                name: 'whatIsYOurPrimaryStresserInYourLifeAtThisTime',
-                                label: 'What is your primary stresser in your life at this time?',
+                            whatIsYOurPrimaryStressInYourLifeAtThisTime: {
+                                name: 'whatIsYOurPrimaryStressInYourLifeAtThisTime',
+                                label: 'What is your primary stress in your life at this time?',
                                 pattern: '\\d+$',
-                                error: "Please enter what is the primary stresser in your life now",
+                                error: "Please enter what is the primary stress in your life now",
                                 classes: 'mdl-textfield-long'
                             },
                             howOftenDoYouFeelRelaxedOrAtPeace: {
@@ -301,8 +301,8 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 error: "Please enter how often you feel relaxed or at peace",
                                 classes: 'mdl-textfield-long'
                             },
-                            mostOfTheTimeSometimesRarelyorNever: {
-                                name: 'mostOfTheTimeSometimesRarelyorNever',
+                            mostOfTheTimeSometimesRarelyOrNever: {
+                                name: 'mostOfTheTimeSometimesRarelyOrNever',
                                 label: 'Most of the time, Sometimes, Rarely, or Never',
                                 pattern: '\\d+$',
                                 error: "Please enter if you feel stressed sometimes, rareley, or never",
@@ -350,8 +350,8 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 error: "Please enter if you exercise or not",
                                 classes: 'mdl-textfield-long'
                             },
-                            howSatisfiedAreYouWithYourExcerciseLevel: {
-                                name: 'howSatisfiedAreYouWithYourExcerciseLevel',
+                            howSatisfiedAreYouWithYourExerciseLevel: {
+                                name: 'howSatisfiedAreYouWithYourExerciseLevel',
                                 label: 'How satisfied are you with your exercise level?',
                                 pattern: '\\d+$',
                                 error: "Please enter how satisfied you are with your exercise level",
@@ -364,7 +364,7 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 error: "Please enter how satisfied you are with your physical activity",
                                 classes: 'mdl-textfield-long'
                             },
-                            howSatisfiedAreYouWithYOurCurrentEatingAndNurtrition: {
+                            howSatisfiedAreYouWithYOurCurrentEatingAndNutrition: {
                                 name: 'howSatisfiedAreYouWithYOurCurrentEatingAndNutrition',
                                 label: 'How Satisfied are you with your current eating and nutrition?',
                                 pattern: '\\d+$',
@@ -420,14 +420,7 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 error: "Please enter the qualities that that you want to develop",
                                 classes: 'mdl-textfield-long'
                             },
-                            ifMoneyOrTimeWereNotRelativehowWouldYouLikeToSpendYourTime: {
-                                name: 'ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime',
-                                label: 'If money or time wer not relative, how would you like to spend your time?',
-                                pattern: '\\d+$',
-                                error: "Please enter what you would do to this question",
-                                classes: 'mdl-textfield-long'
-                            },
-                            ifMoneyOrTimeWereNotRelativehowWouldYouLikeToSpendYourTime: {
+                            ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime: {
                                 name: 'ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime',
                                 label: 'If money or time wer not relative, how would you like to spend your time?',
                                 pattern: '\\d+$',
@@ -438,9 +431,129 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                                 name: 'whatIsTheHardestThingInLifeSoFarHaveYouHadToOvercome',
                                 label: 'What is the hardest thing in life so far have you had to overcome?',
                                 pattern: '\\d+$',
-                                error: "Please enter what you would do to this question",
+                                error: "Please enter what has been the hardest thing you have overcome",
+                                classes: 'mdl-textfield-long'
+                            },
+                            inSixMonthsFromNowWhatWouldYouLikeYourLifeToLookLite: {
+                                name: 'inSixMonthsFromNowWhatWouldYouLikeYourLifeToLookLite',
+                                label: 'In 6 months from now, what would you like your life to look like?',
+                                pattern: '\\d+$',
+                                error: "Please enter what you would like your life too look like from now on",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatAreYourHobbiesOrSpecialInterests: {
+                                name: 'whatAreYourHobbiesOrSpecialInterests',
+                                label: 'What are your hobbies or special interests',
+                                pattern: '\\d+$',
+                                error: "Please enter what your hobbies or special interests are",
+                                classes: 'mdl-textfield-long'
+                            },
+                            doYouHaveAnyConcernsOrReservationsAboutWorkingWithACoach: {
+                                name: 'doYouHaveAnyConcernsOrReservationsAboutWorkingWithACoach',
+                                label: 'Do you have any concerns or reservations about working with a coach?',
+                                pattern: '\\d+$',
+                                error: "Please enter if you have reservations about working with a coach",
+                                classes: 'mdl-textfield-long'
+                            },
+                            howWouldYouLikeToBeCoached: {
+                                name: 'howWouldYouLikeToBeCoached',
+                                label: 'How would you like to be coached?',
+                                pattern: '\\d+$',
+                                error: "Please enter how you would like to be coached",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatAreYourExpectationsForMeAsACoach: {
+                                name: 'whatAreYourExpectationsForMeAsACoach',
+                                label: 'What are your expectations for me as a coach?',
+                                pattern: '\\d+$',
+                                error: "Please enter what your expectations are for me as a coach",
+                                classes: 'mdl-textfield-long'
+                            },
+                            whatWouldYouLikeMeToWorkOn: {
+                                name: 'whatWouldYouLikeMeToWorkOn',
+                                label: 'What would you like me to work on?',
+                                pattern: '\\d+$',
+                                error: "Please enter what you want me to work on",
+                                classes: 'mdl-textfield-long'
+                            },
+                            goalSetting: {
+                                name: 'goalSetting',
+                                label: 'Goal setting',
+                                pattern: '\\d+$',
+                                error: "Please enter your goal setting is",
+                                classes: 'mdl-textfield-long'
+                            },
+                            recipes: {
+                                name: 'recipes',
+                                label: 'Recipes',
+                                pattern: '\\d+$',
+                                error: "Please enter your recipes",
+                                classes: 'mdl-textfield-long'
+                            },
+                            exerciseIdeasAndRoutines: {
+                                name: 'exerciseIdeasAndRoutines',
+                                label: 'Exercise ideas and routines',
+                                pattern: '\\d+$',
+                                error: "Please enter your exercise ideas and routines",
+                                classes: 'mdl-textfield-long'
+                            },
+                            distressingTechniques: {
+                                name: 'distressingTechniques',
+                                label: 'Distressing techniques',
+                                pattern: '\\d+$',
+                                error: "Please enter your distressing techniques",
+                                classes: 'mdl-textfield-long'
+                            },
+                            spiritualHelp: {
+                                name: 'spiritualHelp',
+                                label: 'Spiritual Help',
+                                pattern: '\\d+$',
+                                error: "Please enter your spiritual help",
+                                classes: 'mdl-textfield-long'
+                            },
+                            emotionalSupport: {
+                                name: 'emotionalSupport',
+                                label: 'Emotional support',
+                                pattern: '\\d+$',
+                                error: "Please enter your emotional support",
+                                classes: 'mdl-textfield-long'
+                            },
+                            doYouHaveAComputer: {
+                                name: 'doYouHaveAComputer',
+                                label: 'Do you have a computer?',
+                                pattern: '\\d+$',
+                                error: "Please enter if you have a computer or not",
+                                classes: 'mdl-textfield-long'
+                            },
+                            wouldYouLikeToCommunicateThroughEmails: {
+                                name: 'wouldYouLikeToCommunicateThroughEmails',
+                                label: 'Would you like to communicate through emails?',
+                                pattern: '\\d+$',
+                                error: "Please enter if you would like to communicate through emails",
+                                classes: 'mdl-textfield-long'
+                            },
+                            wouldYouFeelComfortableUsingSkype: {
+                                name: 'wouldYouFeelComfortableUsingSkype',
+                                label: 'Would you feel comfortable using Skype',
+                                pattern: '\\d+$',
+                                error: "Please enter if feel comfortable using Skype",
+                                classes: 'mdl-textfield-long'
+                            },
+                            isThereAnythingElseYouWouldLikeMeToKnowAboutYouThatWouldHelpOurCoachingSessionTogether: {
+                                name: 'isThereAnythingElseYouWouldLikeMeToKnowAboutYouThatWouldHelpOurCoachingSessionTogether',
+                                label: 'Is there anything else you would like me to know about you that would help our coaching session together?',
+                                pattern: '\\d+$',
+                                error: "Please enter if there is anything else you would like me to know about you that would help our coaching session together",
+                                classes: 'mdl-textfield-long'
+                            },
+                            doYouHaveAnyQuestionsForMeAsYourCoach: {
+                                name: 'doYouHaveAnyQuestionsForMeAsYourCoach',
+                                label: 'Do you have any questions for me as your coach?',
+                                pattern: '\\d+$',
+                                error: "Please enter if there is anything else you would like me to know about you that would help our coaching session together",
                                 classes: 'mdl-textfield-long'
                             }
+
                         }
                     };
                 }]

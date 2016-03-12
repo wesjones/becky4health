@@ -491,6 +491,153 @@
                                 pattern: "\\d+$",
                                 error: "Please enter one of these on how your are doing",
                                 classes: "mdl-textfield-long"
+                            },
+                            whatPositiveQualitiesDoYouHaveThatWillHelpYouReachYourGoals: {
+                                name: "whatPositiveQualitiesDoYouHaveThatWillHelpYouReachYourGoals",
+                                label: "What positive qualities do you have that will help you reach your goals?",
+                                pattern: "\\d+$",
+                                error: "Please enter the qualities that will help you reach your goals",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatPositiveQualitiesWouldYouLikeToDevelop: {
+                                name: "whatPositiveQualitiesWouldYouLikeToDevelop",
+                                label: "What positive qualities would you like to develop?",
+                                pattern: "\\d+$",
+                                error: "Please enter the qualities that that you want to develop",
+                                classes: "mdl-textfield-long"
+                            },
+                            ifMoneyOrTimeWereNotRelativehowWouldYouLikeToSpendYourTime: {
+                                name: "ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime",
+                                label: "If money or time wer not relative, how would you like to spend your time?",
+                                pattern: "\\d+$",
+                                error: "Please enter what you would do to this question",
+                                classes: "mdl-textfield-long"
+                            },
+                            ifMoneyOrTimeWereNotRelativehowWouldYouLikeToSpendYourTime: {
+                                name: "ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime",
+                                label: "If money or time wer not relative, how would you like to spend your time?",
+                                pattern: "\\d+$",
+                                error: "Please enter what you would like to spend your time on",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatIsTheHardestThingInLifeSoFarHaveYouHadToOvercome: {
+                                name: "whatIsTheHardestThingInLifeSoFarHaveYouHadToOvercome",
+                                label: "What is the hardest thing in life so far have you had to overcome?",
+                                pattern: "\\d+$",
+                                error: "Please enter what has been the hardest thing you have overcome",
+                                classes: "mdl-textfield-long"
+                            },
+                            inSixMonthsFromNowWhatWouldYouLikeYourLifeToLookLite: {
+                                name: "inSixMonthsFromNowWhatWouldYouLikeYourLifeToLookLite",
+                                label: "In 6 months from now, what would you like your life to look like?",
+                                pattern: "\\d+$",
+                                error: "Please enter what you would like your life too look like from now on",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatAreYourHobbiesOrSpecialInterests: {
+                                name: "whatAreYourHobbiesOrSpecialInterests",
+                                label: "What are your hobbies or special interests",
+                                pattern: "\\d+$",
+                                error: "Please enter what your hobbies or special interests are",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouHaveAnyConcernsOrReservationsAboutWorkingWithACoach: {
+                                name: "doYouHaveAnyConcernsOrReservationsAboutWorkingWithACoach",
+                                label: "Do you have any concerns or reservations about working with a coach?",
+                                pattern: "\\d+$",
+                                error: "Please enter if you have reservations about working with a coach",
+                                classes: "mdl-textfield-long"
+                            },
+                            howWouldYouLikeToBeCoached: {
+                                name: "howWouldYouLikeToBeCoached",
+                                label: "How would you like to be coached?",
+                                pattern: "\\d+$",
+                                error: "Please enter how you would like to be coached",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatAreYourExpectationsForMeAsACoach: {
+                                name: "whatAreYourExpectationsForMeAsACoach",
+                                label: "What are your expectations for me as a coach?",
+                                pattern: "\\d+$",
+                                error: "Please enter what your expectations are for me as a coach",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatWouldYouLikeMeToWorkOn: {
+                                name: "whatWouldYouLikeMeToWorkOn",
+                                label: "What would you like me to work on?",
+                                pattern: "\\d+$",
+                                error: "Please enter what you want me to work on",
+                                classes: "mdl-textfield-long"
+                            },
+                            goalSetting: {
+                                name: "goalSetting",
+                                label: "Goal setting",
+                                pattern: "\\d+$",
+                                error: "Please enter your goal setting is",
+                                classes: "mdl-textfield-long"
+                            },
+                            recipes: {
+                                name: "recipes",
+                                label: "Recipes",
+                                pattern: "\\d+$",
+                                error: "Please enter your recipes",
+                                classes: "mdl-textfield-long"
+                            },
+                            exerciseIdeasAndRoutines: {
+                                name: "exerciseIdeasAndRoutines",
+                                label: "Exercise ideas and routines",
+                                pattern: "\\d+$",
+                                error: "Please enter your exercise ideas and routines",
+                                classes: "mdl-textfield-long"
+                            },
+                            destressingTechniques: {
+                                name: "destressingTechniques",
+                                label: "Destressing techniques",
+                                pattern: "\\d+$",
+                                error: "Please enter your destressing techniques",
+                                classes: "mdl-textfield-long"
+                            },
+                            spiritualHelp: {
+                                name: "spiritualHelp",
+                                label: "Spiritual Help",
+                                pattern: "\\d+$",
+                                error: "Please enter your spiritual help",
+                                classes: "mdl-textfield-long"
+                            },
+                            emotionalSupport: {
+                                name: "emotionalSupport",
+                                label: "Emotional support",
+                                pattern: "\\d+$",
+                                error: "Please enter your emotional support",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouHaveAComputer: {
+                                name: "doYouHaveAComputer",
+                                label: "Do you have a computer?",
+                                pattern: "\\d+$",
+                                error: "Please enter if you have a computer or not",
+                                classes: "mdl-textfield-long"
+                            },
+                            wouldYouLikeToCommunicateThroughEmails: {
+                                name: "wouldYouLikeToCommunicateThroughEmails",
+                                label: "Would you like to communicate through emails?",
+                                pattern: "\\d+$",
+                                error: "Please enter if you would like to communicate through emails",
+                                classes: "mdl-textfield-long"
+                            },
+                            wouldYouFeelComfortableUsingSkype: {
+                                name: "wouldYouFeelComfortableUsingSkype",
+                                label: "Would you feel comfortable using Skype",
+                                pattern: "\\d+$",
+                                error: "Please enter if feel comfortable using Skype",
+                                classes: "mdl-textfield-long"
+                            },
+                            isThereAnythingElseYouWouldLikeMeToKnowAboutYouThatWouldHelpOurCoachingSessionTogether: {
+                                name: "isThereAnythingElseYouWouldLikeMeToKnowAboutYouThatWouldHelpOurCoachingSessionTogether",
+                                label: "Is there anything else you would like me to know about you that would help our coaching session together?",
+                                pattern: "\\d+$",
+                                error: "Please enter if there is anything else you would like me to know about you that would help our coaching session together",
+                                classes: "mdl-textfield-long"
                             }
                         }
                     };
