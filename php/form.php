@@ -50,11 +50,11 @@ if(isset($_POST['email'])) {
 
 
 
-    $first_name = $_POST['first_name']; // required
+    $first_name = "Health"; //$_POST['first_name']; // required
 
-    $last_name = $_POST['last_name']; // required
+    $last_name = "Form";//$_POST['last_name']; // required
 
-    $email_from = $_POST['email']; // required
+    $email_from = "no-reply@becky4health.com";//"$_POST['email']; // required
 
     $telephone = $_POST['phone']; // not required
 

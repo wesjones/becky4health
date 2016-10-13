@@ -18,7 +18,7 @@
 </head>
 <body bh-app>
 
-<form class="main-form">
+<form class="main-form" onsubmit="event.preventDefault(); return false;">
     <div class="main-logo">
         <img src="images/logo.png">
     </div>
@@ -123,7 +123,7 @@
 
         <div class="hz-center">
             <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored hz-center"
-                    hb-click="submit()" hb-enter="submit()" tabindex="99999">All Done, Send It!</button>
+                    hb-click="submit()" tabindex="99999">All Done, Send It!</button>
         </div>
     </div>
 

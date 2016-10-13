@@ -1,12 +1,14 @@
-internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
-    function (app, debug, directive) {
+internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive', 'each'],
+    function (app, debug, directive, each) {
 
         // :: PUBLIC API ::
         exports.boot = function () {
             //document.body.insertAdjacentHTML("beforeEnd", '<application class="hb"></application>');
             app.bootstrap(document.body);
         };
-
+        window.validateForm = function () {
+            return false;
+        };
         directive('bhApp', function () {
             return {
                 scope: true,
@@ -551,12 +553,31 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive'],
                             }
                         }
                     };
-                    scope.submit = function() {
-                        var form = el.querySelector('form');
-                        form.action = "php/form.php";
-                        form.method = "POST";
-                        form.enctype = "multipart/form-data";
-                        form.submit();
+                    scope.submit = function () {
+                        // we need to validate here.
+                        var total = scope.$c.length;
+                        var filled = 0;
+                        each(scope.$c, function ($s) {
+                            if ($s.field.value !== undefined) {
+                                filled += 1;
+                            }
+                        });
+
+                        function send() {
+                            var form = el.querySelector('form');
+                            form.action = "php/form.php";
+                            form.method = "POST";
+                            form.enctype = "multipart/form-data";
+                            form.onsubmit = "";
+                            form.submit();
+                        }
+
+                        if (filled < total) {
+                            var result = confirm("You have only filled in " + ((filled/total)*100).toFixed(1) + "% of the form. Are you sure you want to send it now?");
+                            if (result) {
+                                send();
+                            }
+                        }
                     };
                 }]
             };

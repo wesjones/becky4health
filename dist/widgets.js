@@ -64,14 +64,13 @@
         return define;
     })();
     //! ################# YOUR CODE STARTS HERE #################### //
-    //! node_modules/hbjs/src/utils/parsers/functionArgs.js
-    define("functionArgs", function() {
-        var rx1 = /\(.*?\)/;
-        var rx2 = /([\$\w])+/gm;
-        return function(fn) {
-            var str = (fn || "") + "";
-            return str.match(rx1)[0].match(rx2) || [];
+    //! node_modules/hbjs/src/utils/formatters/removeExtraSpaces.js
+    define("removeExtraSpaces", function() {
+        var removeExtraSpaces = function(str) {
+            str = str + "";
+            return str.replace(/\s+/g, " ");
         };
+        return removeExtraSpaces;
     });
     //! src/widgets/bootstrap.js
     internal("app", [ "module", "dispatcher", "ready", "loader", "findScriptUrls" ], function(module, dispatcher, ready, loader, findScriptUrls) {
@@ -1766,6 +1765,177 @@
             return injector;
         };
     });
+    //! node_modules/hbjs/src/utils/parsers/functionArgs.js
+    define("functionArgs", function() {
+        var rx1 = /\(.*?\)/;
+        var rx2 = /([\$\w])+/gm;
+        return function(fn) {
+            var str = (fn || "") + "";
+            return str.match(rx1)[0].match(rx2) || [];
+        };
+    });
+    //! node_modules/hbjs/src/hb/utils/interpolator.js
+    define("interpolator", [ "each", "removeLineBreaks", "removeExtraSpaces", "apply" ], function(each, removeLineBreaks, removeExtraSpaces, apply) {
+        var undefRx = / of undefined$/;
+        function Interpolator(injector) {
+            var self = this;
+            var ths = "this";
+            var filters = [];
+            var strRefRx = /('|").*?[^\\]\1/g;
+            var strRefRepRx = /(\.?[a-zA-Z\$\_]+\w?\b)(?!\s?\:)/g;
+            var parseRx = /("|')?\w+\s?\1?\|\s?\w+/;
+            var fixStrRefChar = "~*";
+            var fixStrRefScope;
+            var fixStrRefMatches = [];
+            var fixStrRefCount;
+            var getInjection = injector.getInjection.bind(injector);
+            var errorHandler = function(er, extraMessage, data) {
+                if (window.console && console.warn) {
+                    console.warn(extraMessage + "\n" + er.message + "\n" + (er.stack || er.stacktrace || er.backtrace), data);
+                }
+            };
+            function setErrorHandler(fn) {
+                errorHandler = fn;
+            }
+            function interpolateError(er, scope, str, errorHandler) {
+                if (errorHandler) {
+                    errorHandler(er, 'Error evaluating: "' + str + '" against %o', scope);
+                }
+            }
+            function replaceLookupStrDepth(str) {
+                if (str.charAt(0) === ".") {
+                    return str;
+                }
+                return lookupStrDepth(str, fixStrRefScope);
+            }
+            function swapStringMatchOut(str) {
+                var result = fixStrRefChar + fixStrRefCount;
+                fixStrRefMatches.push(str);
+                fixStrRefCount += 1;
+                return result;
+            }
+            function fixStrReferences(str, scope) {
+                var i, len;
+                fixStrRefCount = 0;
+                fixStrRefMatches.length = 0;
+                fixStrRefScope = scope;
+                str = str.replace(strRefRx, swapStringMatchOut);
+                str = str.replace(strRefRepRx, replaceLookupStrDepth);
+                for (i = 0, len = fixStrRefMatches.length; i < len; i += 1) {
+                    str = str.split(fixStrRefChar + i).join(fixStrRefMatches[i]);
+                }
+                return str;
+            }
+            function lookupStrDepth(str, scope) {
+                str = str.trim();
+                if (scope[str] === undefined && scope.hasOwnProperty(str)) {
+                    delete scope[str];
+                }
+                var bool = str.toLowerCase();
+                if (bool !== "true" && bool !== "false") {
+                    return ths + "." + str;
+                }
+                return str;
+            }
+            function unfoundFilter(val) {
+                return val;
+            }
+            function revertTick(val, index, list) {
+                list[index] = val.split("`*`").join(":");
+            }
+            function parseFilter(str, scope, ignoreErrors) {
+                if (str.indexOf("|") !== -1 && str.match(parseRx)) {
+                    str = str.replace("||", "~~");
+                    var parts = str.trim().split("|");
+                    parts[1] = parts[1].replace("~~", "||");
+                    each(parts, trimStrings);
+                    if (parts[1].indexOf(":") !== -1) {
+                        parts[1] = parts[1].replace(/(\')(.*?):(.*?)\1/g, "$1$2`*`$3$1");
+                    }
+                    parts[1] = parts[1].split(":");
+                    var filterName = parts[1].shift().split("-").join(""), filter = injector.val(filterName), args;
+                    if (!filter) {
+                        return {
+                            str: parts[0],
+                            filter: unfoundFilter
+                        };
+                    } else {
+                        args = parts[1];
+                        each(args, revertTick);
+                    }
+                    for (var i = 0; i < args.length; i += 1) {
+                        args[i] = interpolate(scope, args[i], ignoreErrors);
+                    }
+                    return {
+                        filter: function(value) {
+                            args.unshift(value);
+                            return apply(injector.invoke(filter, scope, {
+                                alias: filterName
+                            }), scope, args);
+                        },
+                        str: parts[0]
+                    };
+                }
+                return undefined;
+            }
+            function interpolate(scope, str, ignoreErrors) {
+                var fn = Function, result, filter, i, len;
+                if (str === null || str === undefined) {
+                    return;
+                }
+                for (i = 0, len = filters.length; i < len; i += 1) {
+                    str = filters[i](str);
+                }
+                if (!str) {
+                    return;
+                }
+                filter = parseFilter(str, scope, ignoreErrors);
+                if (filter) {
+                    str = filter.str;
+                }
+                str = fixStrReferences(str, scope);
+                result = apply(new fn("var result; try { result = " + str + "; } catch(er) { result = er; } finally { return result; }"), scope);
+                if (result) {
+                    if (result instanceof Error) {
+                        if (!ignoreErrors && !undefRx.test(result.message)) {
+                            interpolateError(result, scope, str, errorHandler);
+                        }
+                        result = undefined;
+                    }
+                }
+                return filter ? filter.filter(result) : result;
+            }
+            function trimStrings(str, index, list) {
+                list[index] = str && str.trim();
+            }
+            function addFilter(fn) {
+                filters.push(fn);
+            }
+            function removeFilter(fn) {
+                var index = filters.indexOf(fn);
+                if (index !== -1) {
+                    filters.splice(index, 1);
+                }
+            }
+            self.addFilter = addFilter;
+            self.removeFilter = removeFilter;
+            self.invoke = interpolate;
+            self.setErrorHandler = setErrorHandler;
+            self.addFilter(removeLineBreaks);
+            self.addFilter(removeExtraSpaces);
+        }
+        return function(injector) {
+            return new Interpolator(injector);
+        };
+    });
+    //! node_modules/hbjs/src/utils/formatters/removeLineBreaks.js
+    define("removeLineBreaks", function() {
+        var removeLineBreaks = function(str) {
+            str = str + "";
+            return str.replace(/(\r\n|\n|\r)/gm, "");
+        };
+        return removeLineBreaks;
+    });
     //! node_modules/hbjs/src/hb/module.js
     /*!
  import hbd.app
@@ -1932,176 +2102,6 @@
             }
             return app;
         };
-    });
-    //! node_modules/hbjs/src/hb/utils/interpolator.js
-    define("interpolator", [ "each", "removeLineBreaks", "removeExtraSpaces", "apply" ], function(each, removeLineBreaks, removeExtraSpaces, apply) {
-        var undefRx = / of undefined$/;
-        function Interpolator(injector) {
-            var self = this;
-            var ths = "this";
-            var filters = [];
-            var strRefRx = /('|").*?[^\\]\1/g;
-            var strRefRepRx = /(\.?[a-zA-Z\$\_]+\w?\b)(?!\s?\:)/g;
-            var parseRx = /("|')?\w+\s?\1?\|\s?\w+/;
-            var fixStrRefChar = "~*";
-            var fixStrRefScope;
-            var fixStrRefMatches = [];
-            var fixStrRefCount;
-            var getInjection = injector.getInjection.bind(injector);
-            var errorHandler = function(er, extraMessage, data) {
-                if (window.console && console.warn) {
-                    console.warn(extraMessage + "\n" + er.message + "\n" + (er.stack || er.stacktrace || er.backtrace), data);
-                }
-            };
-            function setErrorHandler(fn) {
-                errorHandler = fn;
-            }
-            function interpolateError(er, scope, str, errorHandler) {
-                if (errorHandler) {
-                    errorHandler(er, 'Error evaluating: "' + str + '" against %o', scope);
-                }
-            }
-            function replaceLookupStrDepth(str) {
-                if (str.charAt(0) === ".") {
-                    return str;
-                }
-                return lookupStrDepth(str, fixStrRefScope);
-            }
-            function swapStringMatchOut(str) {
-                var result = fixStrRefChar + fixStrRefCount;
-                fixStrRefMatches.push(str);
-                fixStrRefCount += 1;
-                return result;
-            }
-            function fixStrReferences(str, scope) {
-                var i, len;
-                fixStrRefCount = 0;
-                fixStrRefMatches.length = 0;
-                fixStrRefScope = scope;
-                str = str.replace(strRefRx, swapStringMatchOut);
-                str = str.replace(strRefRepRx, replaceLookupStrDepth);
-                for (i = 0, len = fixStrRefMatches.length; i < len; i += 1) {
-                    str = str.split(fixStrRefChar + i).join(fixStrRefMatches[i]);
-                }
-                return str;
-            }
-            function lookupStrDepth(str, scope) {
-                str = str.trim();
-                if (scope[str] === undefined && scope.hasOwnProperty(str)) {
-                    delete scope[str];
-                }
-                var bool = str.toLowerCase();
-                if (bool !== "true" && bool !== "false") {
-                    return ths + "." + str;
-                }
-                return str;
-            }
-            function unfoundFilter(val) {
-                return val;
-            }
-            function revertTick(val, index, list) {
-                list[index] = val.split("`*`").join(":");
-            }
-            function parseFilter(str, scope, ignoreErrors) {
-                if (str.indexOf("|") !== -1 && str.match(parseRx)) {
-                    str = str.replace("||", "~~");
-                    var parts = str.trim().split("|");
-                    parts[1] = parts[1].replace("~~", "||");
-                    each(parts, trimStrings);
-                    if (parts[1].indexOf(":") !== -1) {
-                        parts[1] = parts[1].replace(/(\')(.*?):(.*?)\1/g, "$1$2`*`$3$1");
-                    }
-                    parts[1] = parts[1].split(":");
-                    var filterName = parts[1].shift().split("-").join(""), filter = injector.val(filterName), args;
-                    if (!filter) {
-                        return {
-                            str: parts[0],
-                            filter: unfoundFilter
-                        };
-                    } else {
-                        args = parts[1];
-                        each(args, revertTick);
-                    }
-                    for (var i = 0; i < args.length; i += 1) {
-                        args[i] = interpolate(scope, args[i], ignoreErrors);
-                    }
-                    return {
-                        filter: function(value) {
-                            args.unshift(value);
-                            return apply(injector.invoke(filter, scope, {
-                                alias: filterName
-                            }), scope, args);
-                        },
-                        str: parts[0]
-                    };
-                }
-                return undefined;
-            }
-            function interpolate(scope, str, ignoreErrors) {
-                var fn = Function, result, filter, i, len;
-                if (str === null || str === undefined) {
-                    return;
-                }
-                for (i = 0, len = filters.length; i < len; i += 1) {
-                    str = filters[i](str);
-                }
-                if (!str) {
-                    return;
-                }
-                filter = parseFilter(str, scope, ignoreErrors);
-                if (filter) {
-                    str = filter.str;
-                }
-                str = fixStrReferences(str, scope);
-                result = apply(new fn("var result; try { result = " + str + "; } catch(er) { result = er; } finally { return result; }"), scope);
-                if (result) {
-                    if (result instanceof Error) {
-                        if (!ignoreErrors && !undefRx.test(result.message)) {
-                            interpolateError(result, scope, str, errorHandler);
-                        }
-                        result = undefined;
-                    }
-                }
-                return filter ? filter.filter(result) : result;
-            }
-            function trimStrings(str, index, list) {
-                list[index] = str && str.trim();
-            }
-            function addFilter(fn) {
-                filters.push(fn);
-            }
-            function removeFilter(fn) {
-                var index = filters.indexOf(fn);
-                if (index !== -1) {
-                    filters.splice(index, 1);
-                }
-            }
-            self.addFilter = addFilter;
-            self.removeFilter = removeFilter;
-            self.invoke = interpolate;
-            self.setErrorHandler = setErrorHandler;
-            self.addFilter(removeLineBreaks);
-            self.addFilter(removeExtraSpaces);
-        }
-        return function(injector) {
-            return new Interpolator(injector);
-        };
-    });
-    //! node_modules/hbjs/src/utils/formatters/removeLineBreaks.js
-    define("removeLineBreaks", function() {
-        var removeLineBreaks = function(str) {
-            str = str + "";
-            return str.replace(/(\r\n|\n|\r)/gm, "");
-        };
-        return removeLineBreaks;
-    });
-    //! node_modules/hbjs/src/utils/formatters/removeExtraSpaces.js
-    define("removeExtraSpaces", function() {
-        var removeExtraSpaces = function(str) {
-            str = str + "";
-            return str.replace(/\s+/g, " ");
-        };
-        return removeExtraSpaces;
     });
     //! node_modules/hbjs/src/utils/formatters/removeHTMLComments.js
     define("removeHTMLComments", function() {
@@ -2534,6 +2534,395 @@
             return matches;
         };
     });
+    //! node_modules/hbjs/src/hb/directives/model.js
+    define("hbModel", [ "hb.directive", "resolve", "query", "hb.debug", "debounce" ], function(directive, resolve, query, debug, debounce) {
+        var $ = query, SELECTED_OPTIONS = "selectedOptions", CHECKED = "checked", VALUE = "value", INNER_TEXT = "innerText", RADIO = "radio";
+        directive("hbModel", function() {
+            return {
+                link: [ "scope", "el", "alias", "attr", function(scope, el, alias, attr) {
+                    var $el = $(el), multipleSelect = false, prop = getProp(), values = alias.value.split(":");
+                    scope.$watch(values[0], setValue);
+                    var onChange = attr.hbModelChange;
+                    var invalidate = debounce(function() {
+                        if (scope && scope.$apply) {
+                            scope.$apply();
+                        }
+                    });
+                    function getProp() {
+                        if (el.type && el.type === "select-one") {
+                            multipleSelect = false;
+                            return SELECTED_OPTIONS;
+                        }
+                        if (el.type && el.type === "select") {
+                            multipleSelect = true;
+                            return SELECTED_OPTIONS;
+                        }
+                        if (el.type && el.type === "checkbox" || el.type && el.type === RADIO) {
+                            return CHECKED;
+                        }
+                        if (el.hasOwnProperty("value") || el.__proto__.hasOwnProperty("value")) {
+                            return VALUE;
+                        }
+                        if (el.hasOwnProperty("innerText") || el.__proto__.hasOwnProperty("innerText")) {
+                            return INNER_TEXT;
+                        }
+                    }
+                    function setValue(value) {
+                        var changed = false;
+                        value = value === undefined ? "" : value;
+                        if (prop === SELECTED_OPTIONS && !multipleSelect) {
+                            for (var i = 0; i < el.options.length; i += 1) {
+                                if (el.options[i].value === value || el.options[i].value === value.value) {
+                                    changed = true;
+                                    el.options.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        } else if (prop === CHECKED && el.type === RADIO) {
+                            changed = true;
+                            var val = el.value === "true" ? true : el.value === "false" ? false : el.value;
+                            if (val === value) {
+                                el.setAttribute(CHECKED, "");
+                            } else {
+                                el.removeAttribute(CHECKED);
+                            }
+                        } else {
+                            changed = true;
+                            el[prop] = value;
+                        }
+                        if (changed && onChange) {
+                            scope.$eval(onChange);
+                        }
+                        if (attr.hbValid) {
+                            scope.$eval(attr.hbValid, scope, {
+                                target: el,
+                                property: alias.value,
+                                value: getValue(),
+                                validity: el.validity,
+                                validationMessage: el.validationMessage
+                            });
+                        }
+                    }
+                    function getValue() {
+                        if (prop === SELECTED_OPTIONS && !multipleSelect) {
+                            return el[prop][0] && el[prop][0].value;
+                        }
+                        if (prop === CHECKED && el.type === RADIO) {
+                            return document.querySelector('input[name="' + el.name + '"]:checked').value;
+                        }
+                        return el[prop] || "";
+                    }
+                    function eventHandler(evt) {
+                        resolve(scope).set(values[0], getValue());
+                        var change = el.getAttribute("hb-change");
+                        if (change) {
+                            scope.$event = evt;
+                            scope.$eval(change);
+                        }
+                        invalidate();
+                    }
+                    $el.bind(values[1] || "change input onpropertychange", eventHandler);
+                    scope.$on("$destroy", function() {
+                        $el.unbindAll();
+                    });
+                } ]
+            };
+        });
+    });
+    //! node_modules/hbjs/src/utils/query/event/bind.js
+    //! pattern /(\s|query)\(.*?\)\.bind\(/
+    define("query.bind", [ "query" ], function(query) {
+        query.fn.bind = query.fn.on = function(events, handler) {
+            events = events.match(/\w+/gim);
+            var i = 0, event, len = events.length;
+            while (i < len) {
+                event = events[i];
+                this.each(function(index, el) {
+                    if (el.attachEvent) {
+                        el["e" + event + handler] = handler;
+                        el[event + handler] = function() {
+                            el["e" + event + handler](window.event);
+                        };
+                        el.attachEvent("on" + event, el[event + handler]);
+                    } else {
+                        el.addEventListener(event, handler, false);
+                    }
+                    if (!el.eventHolder) {
+                        el.eventHolder = [];
+                    }
+                    el.eventHolder[el.eventHolder.length] = [ event, handler ];
+                });
+                i += 1;
+            }
+            return this;
+        };
+    });
+    //! node_modules/hbjs/src/utils/query/query.js
+    define("query", function() {
+        function Query(selector, context) {
+            this.init(selector, context);
+        }
+        var queryPrototype = Query.prototype = Object.create(Array.prototype);
+        var eqRx = /:eq\((\-?\d+)\)$/;
+        function parseEQFilter(scope, selector) {
+            var match, count;
+            match = selector.indexOf(":eq(");
+            if (match !== -1) {
+                match = selector.match(eqRx);
+                selector = selector.replace(eqRx, "");
+                count = match && match[1] !== undefined ? Number(match[1]) : -1;
+                var nodes = scope.context.querySelectorAll(selector);
+                if (count !== undefined) {
+                    if (nodes[count]) {
+                        scope.push(nodes[count]);
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+        queryPrototype.selector = "";
+        function getElementClass(context) {
+            var win = window;
+            if (context) {
+                if (context.parentWindow) {
+                    win = context.parentWindow;
+                } else if (context.defaultWindow) {
+                    win = context.defaultWindow;
+                }
+            }
+            return win.Element;
+        }
+        queryPrototype.init = function(selector, context) {
+            this.context = context;
+            var ElementClass = getElementClass(context);
+            if (typeof selector === "string") {
+                if (selector.substr(0, 1) === "<" && selector.substr(selector.length - 1, 1) === ">") {
+                    this.parseHTML(selector);
+                } else {
+                    this.parseSelector(selector, context);
+                }
+            } else if (selector instanceof Array) {
+                this.parseArray(selector);
+            } else if (selector instanceof ElementClass) {
+                this.parseElement(selector);
+            }
+        };
+        queryPrototype.parseHTML = function(html) {
+            var container = document.createElement("div");
+            container.innerHTML = html;
+            this.length = 0;
+            this.parseArray(container.children);
+        };
+        queryPrototype.parseSelector = function(selector, context) {
+            var ElementClass = getElementClass(context);
+            var i, nodes, len;
+            this.selector = selector;
+            if (context instanceof ElementClass) {
+                this.context = context;
+            } else if (context instanceof Query) {
+                this.context = context[0];
+            } else if (context && context.nodeType === 9) {
+                this.context = context;
+            } else {
+                this.context = document;
+            }
+            if (!parseEQFilter(this, selector)) {
+                nodes = this.context.querySelectorAll(selector);
+                len = nodes.length;
+                i = 0;
+                this.length = 0;
+                while (i < len) {
+                    this.push(nodes[i]);
+                    i += 1;
+                }
+            }
+        };
+        queryPrototype.parseArray = function(list) {
+            var ElementClass = (this.context.parentWindow || this.context.defaultView).Element;
+            var i = 0, len = list.length;
+            this.length = 0;
+            while (i < len) {
+                if (list[i] instanceof ElementClass) {
+                    this.push(list[i]);
+                }
+                i += 1;
+            }
+        };
+        queryPrototype.parseElement = function(element) {
+            this.length = 0;
+            this.push(element);
+        };
+        queryPrototype.toString = function() {
+            if (this.length) {
+                return this[0].outerHTML;
+            }
+        };
+        queryPrototype.each = function(fn) {
+            var i = 0, len = this.length, result;
+            while (i < len) {
+                result = fn.apply(this[i], [ i, this[i] ]);
+                if (result === false) {
+                    break;
+                }
+                i += 1;
+            }
+            return this;
+        };
+        var query = function(selector, context) {
+            for (var n in query.fn) {
+                if (query.fn.hasOwnProperty(n)) {
+                    queryPrototype[n] = query.fn[n];
+                    delete query.fn[n];
+                }
+            }
+            return new Query(selector, context);
+        };
+        query.fn = {};
+        return query;
+    });
+    //! node_modules/hbjs/src/utils/query/event/unbind.js
+    //! pattern /(\s|query)\(.*?\)\.unbind\(/
+    define("query.unbind", [ "query" ], function(query) {
+        query.fn.unbind = query.fn.off = function(events, handler) {
+            if (arguments.length === 1) {
+                this.unbindAll(events);
+            } else {
+                events = events.match(/\w+/gim);
+                var i = 0, event, len = events.length;
+                while (i < len) {
+                    event = events[i];
+                    this.each(function(index, el) {
+                        if (el.detachEvent) {
+                            el.detachEvent("on" + event, el[event + handler]);
+                            el[event + handler] = null;
+                        } else {
+                            el.removeEventListener(event, handler, false);
+                        }
+                    });
+                    i += 1;
+                }
+            }
+            return this;
+        };
+    });
+    //! node_modules/hbjs/src/utils/query/event/unbindAll.js
+    //! pattern /(\s|query)\(.*?\)\.unbindAll\(/
+    define("query.unbindAll", [ "query" ], function(query) {
+        query.fn.unbindAll = function(event) {
+            var scope = this;
+            scope.each(function(index, el) {
+                if (el.eventHolder) {
+                    var removed = 0, handler;
+                    for (var i = 0; i < el.eventHolder.length; i++) {
+                        if (!event || el.eventHolder[i][0] === event) {
+                            event = el.eventHolder[i][0];
+                            handler = el.eventHolder[i][1];
+                            if (el.detachEvent) {
+                                el.detachEvent("on" + event, el[event + handler]);
+                                el[event + handler] = null;
+                            } else {
+                                el.removeEventListener(event, handler, false);
+                            }
+                            el.eventHolder.splice(i, 1);
+                            removed += 1;
+                            i -= 1;
+                        }
+                    }
+                }
+            });
+            return scope;
+        };
+    });
+    //! node_modules/hbjs/src/utils/data/resolve.js
+    define("resolve", [ "isUndefined" ], function(isUndefined) {
+        var aryIndexRx = /\[(.*?)\]/g;
+        function pathToArray(path, delimiter) {
+            if (path instanceof Array) {
+                return path;
+            }
+            delimiter = delimiter || ".";
+            path = path || "";
+            path = path.replace(aryIndexRx, delimiter + "$1");
+            return path.split(delimiter);
+        }
+        function Resolve(data) {
+            this.data = data || {};
+        }
+        var proto = Resolve.prototype;
+        proto.get = function(path, delimiter) {
+            var arr = pathToArray(path, delimiter), space = "", i = 0, len = arr.length;
+            var data = this.data;
+            while (data && i < len) {
+                space = arr[i];
+                data = data[space];
+                if (data === undefined) {
+                    break;
+                }
+                i += 1;
+            }
+            return data;
+        };
+        proto.set = function(path, value, delimiter) {
+            if (isUndefined(path)) {
+                throw new Error('Resolve requires "path"');
+            }
+            var arr = pathToArray(path, delimiter), space = "", i = 0, len = arr.length - 1;
+            var data = this.data;
+            while (i < len) {
+                space = arr[i];
+                if (data[space] === undefined) {
+                    data = data[space] = {};
+                } else {
+                    data = data[space];
+                }
+                i += 1;
+            }
+            if (arr.length > 0) {
+                data[arr.pop()] = value;
+            }
+            return this.data;
+        };
+        proto.default = function(path, value, delimiter) {
+            if (isUndefined(this.get(path, delimiter))) {
+                this.set(path, value, delimiter);
+            }
+        };
+        proto.clear = function() {
+            var d = this.data;
+            for (var e in d) {
+                if (d.hasOwnProperty(e)) {
+                    delete d[e];
+                }
+            }
+        };
+        proto.path = function(path) {
+            return this.set(path, {});
+        };
+        var resolve = function(data) {
+            return new Resolve(data);
+        };
+        return resolve;
+    });
+    //! node_modules/hbjs/src/utils/async/debounce.js
+    define("debounce", function() {
+        var debounce = function(func, wait, scope) {
+            var timeout;
+            return function() {
+                var context = scope || this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    timeout = null;
+                    func.apply(context, args);
+                }, wait);
+                return function() {
+                    clearTimeout(timeout);
+                    timeout = null;
+                };
+            };
+        };
+        return debounce;
+    });
     //! node_modules/hbjs/src/hb/directives/attr.js
     //! pattern /hb\-(src|alt|title|pattern|id|for|name|checked|disabled|value|href)\=/
     define("hbAttr", [ "hb.directive" ], function(directive) {
@@ -2923,29 +3312,13 @@
         };
         return filter;
     });
-    //! node_modules/hbjs/src/utils/async/debounce.js
-    define("debounce", function() {
-        var debounce = function(func, wait, scope) {
-            var timeout;
-            return function() {
-                var context = scope || this, args = arguments;
-                clearTimeout(timeout);
-                timeout = setTimeout(function() {
-                    timeout = null;
-                    func.apply(context, args);
-                }, wait);
-                return function() {
-                    clearTimeout(timeout);
-                    timeout = null;
-                };
-            };
-        };
-        return debounce;
-    });
     //! src/application/bhApp.js
-    internal("bhApp", [ "app", "hb.debug.dev", "hb.directive" ], function(app, debug, directive) {
+    internal("bhApp", [ "app", "hb.debug.dev", "hb.directive", "each" ], function(app, debug, directive, each) {
         exports.boot = function() {
             app.bootstrap(document.body);
+        };
+        window.validateForm = function() {
+            return false;
         };
         directive("bhApp", function() {
             return {
@@ -3517,11 +3890,27 @@
                         }
                     };
                     scope.submit = function() {
-                        var form = el.querySelector("form");
-                        form.action = "php/form.php";
-                        form.method = "POST";
-                        form.enctype = "multipart/form-data";
-                        form.submit();
+                        var total = scope.$c.length;
+                        var filled = 0;
+                        each(scope.$c, function($s) {
+                            if ($s.field.value !== undefined) {
+                                filled += 1;
+                            }
+                        });
+                        function send() {
+                            var form = el.querySelector("form");
+                            form.action = "php/form.php";
+                            form.method = "POST";
+                            form.enctype = "multipart/form-data";
+                            form.onsubmit = "";
+                            form.submit();
+                        }
+                        if (filled < total) {
+                            var result = confirm("You have only filled in " + (filled / total * 100).toFixed(1) + "% of the form. Are you sure you want to send it now?");
+                            if (result) {
+                                send();
+                            }
+                        }
                     };
                 } ]
             };
@@ -3819,7 +4208,7 @@
             return {
                 scope: true,
                 replace: true,
-                tpl: "<div class=\"mdl-textfield {{::field.classes}} mdl-js-textfield mdl-textfield--floating-label\" hb-alt=\"field.label\"> <input class=\"mdl-textfield__input\" hb-id=\"field.name\" hb-name=\"field.name\" type=\"text\" hb-pattern=\"field.pattern\"> <label class=\"mdl-textfield__label\" hb-for=\"field.name\">{{::field.label}} <span class=\"subtext\">{{::field.subtext}}</span></label> <span class=\"mdl-textfield__error\">{{::field.error}}</span></div>",
+                tpl: "<div class=\"mdl-textfield {{::field.classes}} mdl-js-textfield mdl-textfield--floating-label\" hb-alt=\"field.label\"> <input class=\"mdl-textfield__input\" hb-id=\"field.name\" hb-name=\"field.name\" type=\"text\" hb-pattern=\"field.pattern\" hb-model=\"field.value\"> <label class=\"mdl-textfield__label\" hb-for=\"field.name\">{{::field.label}} <span class=\"subtext\">{{::field.subtext}}</span></label> <span class=\"mdl-textfield__error\">{{::field.error}}</span></div>",
                 link: [ "scope", "el", "alias", function(scope, el, alias) {
                     scope.field = scope.$eval(alias.value);
                 } ]
@@ -3832,7 +4221,7 @@
             return {
                 scope: true,
                 replace: true,
-                tpl: "<div class=\"mdl-textfield {{::field.classes}} mdl-js-textfield mdl-textfield--floating-label is-focused\" hb-alt=\"field.label\"> <label class=\"mdl-textfield__label\" hb-for=\"field.name\">{{::field.label}} <span class=\"subtext\">{{::field.subtext}}</span></label> <div hb-id=\"field.name\" hb-repeat=\"option in field.options\"> <label class=\"mdl-radio mdl-js-radio mdl-js-ripple-effect\" hb-for=\"option.name\"> <input type=\"radio\" hb-id=\"option.name\" class=\"mdl-radio__button\" hb-name=\"field.name\" hb-value=\"option.name\" hb-checked=\"option.selected\"> <span class=\"mdl-radio__label\">{{option.label}}</span> </label> </div></div>",
+                tpl: "<div class=\"mdl-textfield {{::field.classes}} mdl-js-textfield mdl-textfield--floating-label is-focused\" hb-alt=\"field.label\"> <label class=\"mdl-textfield__label\" hb-for=\"field.name\">{{::field.label}} <span class=\"subtext\">{{::field.subtext}}</span></label> <div hb-id=\"field.name\" hb-repeat=\"option in field.options\"> <label class=\"mdl-radio mdl-js-radio mdl-js-ripple-effect\" hb-for=\"option.name\"> <input type=\"radio\" hb-id=\"option.name\" class=\"mdl-radio__button\" hb-name=\"field.name\" hb-value=\"option.name\" hb-model=\"field.value\" hb-checked=\"option.selected\"> <span class=\"mdl-radio__label\">{{option.label}}</span> </label> </div></div>",
                 link: [ "scope", "el", "alias", function(scope, el, alias) {
                     scope.field = scope.$eval(alias.value);
                 } ]
