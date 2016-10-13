@@ -20,7 +20,7 @@ internal('app', ['module', 'dispatcher', 'ready', 'loader', 'findScriptUrls'],
             }
         };
 
-        var assets = [name + '.css'];
+        var assets = [];//name + '.css'];
         var urls = findScriptUrls(new RegExp(name + '(\.min)?\.js$'), 'i');
         if (urls.length) {
             var scriptUrl = urls[0].substring(0, urls[0].lastIndexOf('/'));

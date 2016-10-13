@@ -1,8 +1,3 @@
-.bh {
-  padding: 4px;
-}
-
-
 html,
 body {
   margin: 0;
@@ -10,6 +5,19 @@ body {
   width: 100%;
   height: 100%;
   background: #efefef;
+}
+.hz-center {
+  width: calc(80%);
+  margin-left: auto;
+  margin-right: auto;
+}
+.sizzle {
+  width: 100%;
+  text-align: center;
+}
+.sizzle img {
+  width: 100%;
+  max-width: 888px;
 }
 .main-logo {
   width: 100%;

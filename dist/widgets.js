@@ -13,6 +13,9 @@
         defined = get("d");
         pending = get("p");
         initDefinition = function(name) {
+            if (defined[name]) {
+                return;
+            }
             var args = arguments;
             var val = args[1];
             if (typeof val === "function") {
@@ -61,1142 +64,145 @@
         return define;
     })();
     //! ################# YOUR CODE STARTS HERE #################### //
-    //! node_modules/hbjs/src/utils/validators/isArguments.js
-    define("isArguments", [ "toString" ], function(toString) {
-        var isArguments = function(value) {
-            var str = String(value);
-            var isArguments = str === "[object Arguments]";
-            if (!isArguments) {
-                isArguments = str !== "[object Array]" && value !== null && typeof value === "object" && typeof value.length === "number" && value.length >= 0 && (!value.callee || toString.call(value.callee) === "[object Function]");
-            }
-            return isArguments;
+    //! node_modules/hbjs/src/utils/parsers/functionArgs.js
+    define("functionArgs", function() {
+        var rx1 = /\(.*?\)/;
+        var rx2 = /([\$\w])+/gm;
+        return function(fn) {
+            var str = (fn || "") + "";
+            return str.match(rx1)[0].match(rx2) || [];
         };
-        return isArguments;
     });
-    //! src/application/bhApp.js
-    internal("bhApp", [ "app", "hb.debug.dev", "hb.directive" ], function(app, debug, directive) {
-        exports.boot = function() {
-            app.bootstrap(document.body);
+    //! src/widgets/bootstrap.js
+    internal("app", [ "module", "dispatcher", "ready", "loader", "findScriptUrls" ], function(module, dispatcher, ready, loader, findScriptUrls) {
+        dispatcher(exports);
+        var name = "widgets";
+        var app = dispatcher(module("app"));
+        app.preLink = function(el, directive) {
+            if (directive.alias.name.indexOf("hb-") === -1 && directive.alias.name.indexOf("-") !== -1) {
+                el.classList.add(directive.alias.name);
+                el.setAttribute("ng-non-bindable", "");
+            }
         };
-        directive("bhApp", function() {
-            return {
-                scope: true,
-                link: [ "scope", "el", "attr", function(scope, el, attr) {
-                    scope.model = {
-                        title: "Becky For Health Signup Form",
-                        profile: {
-                            firstName: {
-                                name: "first_name",
-                                label: "First Name",
-                                pattern: "[A-Za-z]+",
-                                error: "Please enter your first name.",
-                                classes: ""
-                            },
-                            lastName: {
-                                name: "last_name",
-                                label: "Last Name",
-                                pattern: "[A-Za-z]+",
-                                error: "Please enter your last name.",
-                                classes: ""
-                            },
-                            email: {
-                                name: "email",
-                                label: "Email",
-                                pattern: "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}$",
-                                error: "Please enter a valid email address.",
-                                classes: ""
-                            },
-                            phone: {
-                                name: "phone",
-                                label: "Phone",
-                                subtext: "###-###-####",
-                                pattern: "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$",
-                                error: "Please enter a valid phone number.",
-                                classes: ""
-                            },
-                            age: {
-                                name: "age",
-                                label: "Age",
-                                pattern: "\\d+$",
-                                error: "You must be at least 13 years of age.",
-                                classes: "mdl-textfield-mini"
-                            },
-                            gender: {
-                                name: "gender",
-                                label: "Gender",
-                                options: [ {
-                                    name: "male",
-                                    label: "Male",
-                                    selected: true
-                                }, {
-                                    name: "female",
-                                    label: "Female"
-                                } ]
-                            },
-                            weight: {
-                                name: "weight",
-                                label: "Weight",
-                                pattern: "\\d+(lbs)?$",
-                                error: "Please enter your weight.",
-                                classes: "mdl-textfield-sml"
-                            },
-                            height: {
-                                name: "height",
-                                label: "Height",
-                                subtext: "(e:5ft 2in)",
-                                pattern: "d+ft(s+d+in)?$",
-                                error: "Please enter your height like (5ft 2in).",
-                                classes: "mdl-textfield-sml"
-                            },
-                            relationship: {
-                                name: "relationship",
-                                label: "Relationship Status",
-                                pattern: "[\\w\\s]+$",
-                                error: "Please describe your relationship status.",
-                                classes: "mdl-textfield-long"
-                            },
-                            mailingAddress: {
-                                name: "mailingAddress",
-                                label: "Mailing Address",
-                                pattern: "[\\w\\s\\.\\-]+$",
-                                error: "Please provide your maliing address",
-                                classes: ""
-                            },
-                            city: {
-                                name: "city",
-                                label: "City",
-                                pattern: "[\\w\\s]+$",
-                                error: "Please provide your City",
-                                classes: "mdl-textfield-med"
-                            },
-                            state: {
-                                name: "state",
-                                label: "State",
-                                pattern: "[A-Za-z]{2}",
-                                error: "Please provide your state abreviation",
-                                classes: "mdl-textfield-mini"
-                            },
-                            zip: {
-                                name: "zip",
-                                label: "Zipcode",
-                                pattern: "\\d{5}(\\-\\d+)?$",
-                                error: "Please enter your zipcode",
-                                classes: "mdl-textfield-sml"
-                            },
-                            childrenAges: {
-                                name: "childrenAges",
-                                label: "Children/Ages",
-                                pattern: "\\d+$",
-                                error: "Please enter your children's ages",
-                                classes: "mdl-textfield-sml"
-                            },
-                            pets: {
-                                name: "pets",
-                                label: "Pets",
-                                options: [ {
-                                    name: "no",
-                                    label: "No",
-                                    selected: true
-                                }, {
-                                    name: "yes",
-                                    label: "Yes"
-                                } ]
-                            },
-                            doYouSmoke: {
-                                name: "doYouSmoke",
-                                label: "Do you Smoke?",
-                                options: [ {
-                                    name: "no",
-                                    label: "No",
-                                    selected: true
-                                }, {
-                                    name: "yes",
-                                    label: "Yes"
-                                } ]
-                            },
-                            drinkAlcohol: {
-                                name: "drinkAlcohol",
-                                label: "Drink Alcohol?",
-                                options: [ {
-                                    name: "no",
-                                    label: "No",
-                                    selected: true
-                                }, {
-                                    name: "yes",
-                                    label: "Yes"
-                                } ]
-                            },
-                            occupation: {
-                                name: "occupation",
-                                label: "Occupation",
-                                pattern: "\\d+$",
-                                error: "Please enter your occupation",
-                                classes: "mdl-textfield-med"
-                            },
-                            hoursOfWorkPerWeek: {
-                                name: "HoursOfWorkPerWeek",
-                                label: "Hours of work per week",
-                                pattern: "\\d+$",
-                                error: "Please enter how many hours you work per week",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatPromptedYouToContactMe: {
-                                name: "whatPromptedYouToContactMe",
-                                label: "What prompted you to contact me?",
-                                pattern: "\\d+$",
-                                error: "Please say why you contact me",
-                                classes: "mdl-textfield-long"
-                            },
-                            inGeneralHowWouldYouRateYourOverallHealth: {
-                                name: "inGeneralHowWouldYouRateYourOverallHealth",
-                                label: "In general how would you rate your overall health",
-                                pattern: "\\d+$",
-                                error: "Please rate your overall health",
-                                classes: "mdl-textfield-long"
-                            },
-                            mainHealthConcerns: {
-                                name: "mainHealthConcerns",
-                                label: "Main Health Concerns",
-                                pattern: "\\d+$",
-                                error: "Please enter your main health concerns",
-                                classes: "mdl-textfield-long"
-                            },
-                            anyOtherConcerns: {
-                                name: "anyOtherConcerns",
-                                label: "Any other concerns",
-                                pattern: "\\d+$",
-                                error: "Please enter all your concerns",
-                                classes: "mdl-textfield-long"
-                            },
-                            atWhatPointInYourLifeHaveYouFeltYourBest: {
-                                name: "atWhatPointInYourLifeHaveYouFeltYourBest",
-                                label: "At What point in your life have you felt your best",
-                                pattern: "\\d+$",
-                                error: "Please enter the time that you have felt your best",
-                                classes: "mdl-textfield-long"
-                            },
-                            wellnessGoals: {
-                                name: "wellnessGoals",
-                                label: "Wellness Goals",
-                                pattern: "\\d+$",
-                                error: "Please enter your wellness goals",
-                                classes: "mdl-textfield-long"
-                            },
-                            howIsYourSleep: {
-                                name: "howIsYourSleep",
-                                label: "How is your sleep Goals",
-                                pattern: "\\d+$",
-                                error: "Please enter if you sleep good or not",
-                                classes: "mdl-textfield-long"
-                            },
-                            howManyHoursDoYouSleep: {
-                                name: "howManyHoursDoYouSleep",
-                                label: "How many hours do you sleep?",
-                                pattern: "\\d+$",
-                                error: "Please enter how many hours you sleep",
-                                classes: "mdl-textfield-long"
-                            },
-                            doYouWakeUpAtNight: {
-                                name: "doYouWakeUpAtNight",
-                                label: "Do you wake up at night?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you wake up at night?",
-                                classes: "mdl-textfield-long"
-                            },
-                            timeToBed: {
-                                name: "timeToBed",
-                                label: "Time to Bed",
-                                pattern: "\\d+$",
-                                error: "Please enter the time you usually go to bed",
-                                classes: "mdl-textfield-long"
-                            },
-                            timeWakeUp: {
-                                name: "timeWakeUp",
-                                label: "Time wake up",
-                                pattern: "\\d+$",
-                                error: "Please enter the time you usually wake up",
-                                classes: "mdl-textfield-long"
-                            },
-                            howDoYouFeelWhenYouWakeUp: {
-                                name: "howDoYouFeelWhenYouWakeUp",
-                                label: "How do you feel when you wake up?",
-                                pattern: "\\d+$",
-                                error: "Please enter how you feel after you wake up",
-                                classes: "mdl-textfield-long"
-                            },
-                            anyPainStiffnessOrSwelling: {
-                                name: "anyPainStiffnessOrSwelling",
-                                label: "Any Pain,Stiffness,or swelling?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you have any pain stiffness or swelling",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatDoYouDoForIt: {
-                                name: "whatDoYouDoForIt",
-                                label: "What do you do for it?",
-                                pattern: "\\d+$",
-                                error: "Please enter what you do for it",
-                                classes: "mdl-textfield-long"
-                            },
-                            howIsYourDigestion: {
-                                name: "howIsYourDigestion",
-                                label: "How is your digestion?",
-                                pattern: "\\d+$",
-                                error: "Please enter how is your digestion",
-                                classes: "mdl-textfield-long"
-                            },
-                            doYouExperienceConstipationBloatingDiarrhea: {
-                                name: "doYouExperienceConstipationBloatingDiarrhea",
-                                label: "Do you experience Constipation,Bloating,Diarrhea?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you have any of the listed above",
-                                classes: "mdl-textfield-long"
-                            },
-                            doYouHaveAllergiesOrSensitivities: {
-                                name: "doYouHaveAllergiesOrSensitivities",
-                                label: "Do you have Allergies or Sensitivities?",
-                                pattern: "\\d+$",
-                                error: "Please enter what allergies or sensitivities that you have",
-                                classes: "mdl-textfield-long"
-                            },
-                            doYouTakeAnyMedicationSupplementsOrVitamins: {
-                                name: "doYouTakeAnyMedicationSupplementsOrVitamins",
-                                label: "Do you take any medication, supplements, or Vitamins?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you take any medication listed above",
-                                classes: "mdl-textfield-long"
-                            },
-                            howMuchStressDoYouHaveInYourLifeRigtNow: {
-                                name: "howMuchStressDoYouHaveInYourLifeRigtNow",
-                                label: "How much stress do you have in your life right now?(On a scale of 1-10)",
-                                pattern: "\\d+$",
-                                error: "Please enter the stress you have in your life now",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatIsYOurPrimaryStresserInYourLifeAtThisTime: {
-                                name: "whatIsYOurPrimaryStresserInYourLifeAtThisTime",
-                                label: "What is your primary stresser in your life at this time?",
-                                pattern: "\\d+$",
-                                error: "Please enter what is the primary stresser in your life now",
-                                classes: "mdl-textfield-long"
-                            },
-                            howOftenDoYouFeelRelaxedOrAtPeace: {
-                                name: "howOftenDoYouFeelRelaxedOrAtPeace",
-                                label: "How Often do you feel relaxed or at peace?",
-                                pattern: "\\d+$",
-                                error: "Please enter how often you feel relaxed or at peace",
-                                classes: "mdl-textfield-long"
-                            },
-                            mostOfTheTimeSometimesRarelyorNever: {
-                                name: "mostOfTheTimeSometimesRarelyorNever",
-                                label: "Most of the time, Sometimes, Rarely, or Never",
-                                pattern: "\\d+$",
-                                error: "Please enter if you feel stressed sometimes, rareley, or never",
-                                classes: "mdl-textfield-long"
-                            },
-                            areYouBeingTreatedForAnyEmotionalOrPhysicalConditionAtThisTime: {
-                                name: "areYouBeingTreatedForAnyEmotionalOrPhysicalConditionAtThisTime",
-                                label: "Are you being treated for any emotional or physical condition at this time?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you are being treated for any emotional or physical condition now",
-                                classes: "mdl-textfield-long"
-                            },
-                            howIsYOurEnergyLevelThroughoutTheDay: {
-                                name: "howIsYOurEnergyLevelThroughoutTheDay",
-                                label: "How is your energy level throughout the day?",
-                                pattern: "\\d+$",
-                                error: "Please enter how your energy is during the day",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatGivesYouEnergy: {
-                                name: "whatGivesYouEnergy",
-                                label: "What gives you energy?",
-                                pattern: "\\d+$",
-                                error: "Please enter what gives you energy",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatZapsYouOfYourEnergy: {
-                                name: "whatZapsYouOfYourEnergy",
-                                label: "What zaps you of your energy?",
-                                pattern: "\\d+$",
-                                error: "Please enter what zaps you of your energy",
-                                classes: "mdl-textfield-long"
-                            },
-                            doYouHaveAMorningRoutineThatYouPractice: {
-                                name: "doYouHaveAMorningRoutineThatYouPractice",
-                                label: "Do you have a morning routine that you practice?",
-                                pattern: "\\d+$",
-                                error: "Please enter what your morning routine is",
-                                classes: "mdl-textfield-long"
-                            },
-                            doYouExercise: {
-                                name: "doYouExercise",
-                                label: "Do you exercise?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you exercise or not",
-                                classes: "mdl-textfield-long"
-                            },
-                            howSatisfiedAreYouWithYourExcerciseLevel: {
-                                name: "howSatisfiedAreYouWithYourExcerciseLevel",
-                                label: "How satisfied are you with your exercise level?",
-                                pattern: "\\d+$",
-                                error: "Please enter how satisfied you are with your exercise level",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatDoYouLikeToDoForPhysicalActivity: {
-                                name: "whatDoYouLikeToDoForPhysicalActivity",
-                                label: "How satisfied are you with your physical activity?",
-                                pattern: "\\d+$",
-                                error: "Please enter how satisfied you are with your physical activity",
-                                classes: "mdl-textfield-long"
-                            },
-                            howSatisfiedAreYouWithYOurCurrentEatingAndNurtrition: {
-                                name: "howSatisfiedAreYouWithYOurCurrentEatingAndNutrition",
-                                label: "How Satisfied are you with your current eating and nutrition?",
-                                pattern: "\\d+$",
-                                error: "Please enter how your are with your eating and nutrition now",
-                                classes: "mdl-textfield-long"
-                            },
-                            howSatisfiedAreYOuWithOurWeight: {
-                                name: "howSatisfiedAreYouWithOurWeight",
-                                label: "How Satisfied are you with your with or weight ",
-                                pattern: "\\d+$",
-                                error: "Please enter how your weight or with is satisfied",
-                                classes: "mdl-textfield-long"
-                            },
-                            howSatisfiedAreYouWithYourLifeInGeneral: {
-                                name: "HowSatisfiedAreYouWithYourLifeInGeneral",
-                                label: "How Satisfied are your life in general ",
-                                pattern: "\\d+$",
-                                error: "Please enter how your life is in general",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatWouldYouLikeToDoToChangeForTheBetter: {
-                                name: "whatWouldYouLikeToDoToChangeForTheBetter",
-                                label: "What would you like to do to change for the better? ",
-                                pattern: "\\d+$",
-                                error: "Please enter what you would like to do to change for the better.",
-                                classes: "mdl-textfield-long"
-                            },
-                            howWouldYouRateYourOverallSelfEsteem: {
-                                name: "howWouldYouRateYourOverallSelfEsteem",
-                                label: "How would you rate your overall Self-Esteem ",
-                                pattern: "\\d+$",
-                                error: "Please enter what you would rate your Self-Esteem?",
-                                classes: "mdl-textfield-long"
-                            },
-                            ExcellentVeryGoodGoodFairOrPoor: {
-                                name: "ExcellentVeryGoodGoodFairOrPoor",
-                                label: "Excellent, Very Good, Good, Fair, or Poor?",
-                                pattern: "\\d+$",
-                                error: "Please enter one of these on how your are doing",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatPositiveQualitiesDoYouHaveThatWillHelpYouReachYourGoals: {
-                                name: "whatPositiveQualitiesDoYouHaveThatWillHelpYouReachYourGoals",
-                                label: "What positive qualities do you have that will help you reach your goals?",
-                                pattern: "\\d+$",
-                                error: "Please enter the qualities that will help you reach your goals",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatPositiveQualitiesWouldYouLikeToDevelop: {
-                                name: "whatPositiveQualitiesWouldYouLikeToDevelop",
-                                label: "What positive qualities would you like to develop?",
-                                pattern: "\\d+$",
-                                error: "Please enter the qualities that that you want to develop",
-                                classes: "mdl-textfield-long"
-                            },
-                            ifMoneyOrTimeWereNotRelativehowWouldYouLikeToSpendYourTime: {
-                                name: "ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime",
-                                label: "If money or time wer not relative, how would you like to spend your time?",
-                                pattern: "\\d+$",
-                                error: "Please enter what you would do to this question",
-                                classes: "mdl-textfield-long"
-                            },
-                            ifMoneyOrTimeWereNotRelativehowWouldYouLikeToSpendYourTime: {
-                                name: "ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime",
-                                label: "If money or time wer not relative, how would you like to spend your time?",
-                                pattern: "\\d+$",
-                                error: "Please enter what you would like to spend your time on",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatIsTheHardestThingInLifeSoFarHaveYouHadToOvercome: {
-                                name: "whatIsTheHardestThingInLifeSoFarHaveYouHadToOvercome",
-                                label: "What is the hardest thing in life so far have you had to overcome?",
-                                pattern: "\\d+$",
-                                error: "Please enter what has been the hardest thing you have overcome",
-                                classes: "mdl-textfield-long"
-                            },
-                            inSixMonthsFromNowWhatWouldYouLikeYourLifeToLookLite: {
-                                name: "inSixMonthsFromNowWhatWouldYouLikeYourLifeToLookLite",
-                                label: "In 6 months from now, what would you like your life to look like?",
-                                pattern: "\\d+$",
-                                error: "Please enter what you would like your life too look like from now on",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatAreYourHobbiesOrSpecialInterests: {
-                                name: "whatAreYourHobbiesOrSpecialInterests",
-                                label: "What are your hobbies or special interests",
-                                pattern: "\\d+$",
-                                error: "Please enter what your hobbies or special interests are",
-                                classes: "mdl-textfield-long"
-                            },
-                            doYouHaveAnyConcernsOrReservationsAboutWorkingWithACoach: {
-                                name: "doYouHaveAnyConcernsOrReservationsAboutWorkingWithACoach",
-                                label: "Do you have any concerns or reservations about working with a coach?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you have reservations about working with a coach",
-                                classes: "mdl-textfield-long"
-                            },
-                            howWouldYouLikeToBeCoached: {
-                                name: "howWouldYouLikeToBeCoached",
-                                label: "How would you like to be coached?",
-                                pattern: "\\d+$",
-                                error: "Please enter how you would like to be coached",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatAreYourExpectationsForMeAsACoach: {
-                                name: "whatAreYourExpectationsForMeAsACoach",
-                                label: "What are your expectations for me as a coach?",
-                                pattern: "\\d+$",
-                                error: "Please enter what your expectations are for me as a coach",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatWouldYouLikeMeToWorkOn: {
-                                name: "whatWouldYouLikeMeToWorkOn",
-                                label: "What would you like me to work on?",
-                                pattern: "\\d+$",
-                                error: "Please enter what you want me to work on",
-                                classes: "mdl-textfield-long"
-                            },
-                            goalSetting: {
-                                name: "goalSetting",
-                                label: "Goal setting",
-                                pattern: "\\d+$",
-                                error: "Please enter your goal setting is",
-                                classes: "mdl-textfield-long"
-                            },
-                            recipes: {
-                                name: "recipes",
-                                label: "Recipes",
-                                pattern: "\\d+$",
-                                error: "Please enter your recipes",
-                                classes: "mdl-textfield-long"
-                            },
-                            exerciseIdeasAndRoutines: {
-                                name: "exerciseIdeasAndRoutines",
-                                label: "Exercise ideas and routines",
-                                pattern: "\\d+$",
-                                error: "Please enter your exercise ideas and routines",
-                                classes: "mdl-textfield-long"
-                            },
-                            destressingTechniques: {
-                                name: "destressingTechniques",
-                                label: "Destressing techniques",
-                                pattern: "\\d+$",
-                                error: "Please enter your destressing techniques",
-                                classes: "mdl-textfield-long"
-                            },
-                            spiritualHelp: {
-                                name: "spiritualHelp",
-                                label: "Spiritual Help",
-                                pattern: "\\d+$",
-                                error: "Please enter your spiritual help",
-                                classes: "mdl-textfield-long"
-                            },
-                            emotionalSupport: {
-                                name: "emotionalSupport",
-                                label: "Emotional support",
-                                pattern: "\\d+$",
-                                error: "Please enter your emotional support",
-                                classes: "mdl-textfield-long"
-                            },
-                            doYouHaveAComputer: {
-                                name: "doYouHaveAComputer",
-                                label: "Do you have a computer?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you have a computer or not",
-                                classes: "mdl-textfield-long"
-                            },
-                            wouldYouLikeToCommunicateThroughEmails: {
-                                name: "wouldYouLikeToCommunicateThroughEmails",
-                                label: "Would you like to communicate through emails?",
-                                pattern: "\\d+$",
-                                error: "Please enter if you would like to communicate through emails",
-                                classes: "mdl-textfield-long"
-                            },
-                            wouldYouFeelComfortableUsingSkype: {
-                                name: "wouldYouFeelComfortableUsingSkype",
-                                label: "Would you feel comfortable using Skype",
-                                pattern: "\\d+$",
-                                error: "Please enter if feel comfortable using Skype",
-                                classes: "mdl-textfield-long"
-                            },
-                            isThereAnythingElseYouWouldLikeMeToKnowAboutYouThatWouldHelpOurCoachingSessionTogether: {
-                                name: "isThereAnythingElseYouWouldLikeMeToKnowAboutYouThatWouldHelpOurCoachingSessionTogether",
-                                label: "Is there anything else you would like me to know about you that would help our coaching session together?",
-                                pattern: "\\d+$",
-                                error: "Please enter if there is anything else you would like me to know about you that would help our coaching session together",
-                                classes: "mdl-textfield-long"
-                            }
+        var assets = [];
+        var urls = findScriptUrls(new RegExp(name + "(.min)?.js$"), "i");
+        if (urls.length) {
+            var scriptUrl = urls[0].substring(0, urls[0].lastIndexOf("/"));
+            var len = assets.length;
+            for (var i = 0; i < len; i += 1) {
+                assets[i] = scriptUrl + "/" + assets[i];
+            }
+            loader.load(assets, function() {
+                ready(function() {
+                    app.bootstrap(document.body);
+                    delete exports.$$;
+                    exports.fire("ready", app);
+                });
+            });
+        }
+        return app;
+    });
+    //! node_modules/hbjs/src/hb/directives/events.js
+    //! pattern /hb\-(click|mousedown|mouseup|keydown|keyup|touchstart|touchend|touchmove|animation\-start|animation\-end)\=/
+    define("hbEvents", [ "hb", "hb.val", "each" ], function(hb, val, each) {
+        var UI_EVENTS = "click change mousedown mouseup mouseover mouseout keydown keyup touchstart touchend touchmove focus blur".split(" ");
+        var pfx = [ "webkit", "moz", "MS", "o", "" ];
+        var ANIME_EVENTS = "AnimationStart AnimationEnd".split(" ");
+        function onAnime(element, eventType, callback) {
+            for (var p = 0; p < pfx.length; p++) {
+                if (!pfx[p]) {
+                    eventType = eventType.toLowerCase();
+                }
+                element.addEventListener(pfx[p] + eventType, callback, false);
+            }
+        }
+        function offAnime(element, eventType, callback) {
+            for (var p = 0; p < pfx.length; p++) {
+                if (!pfx[p]) {
+                    eventType = eventType.toLowerCase();
+                }
+                element.addEventListener(pfx[p] + eventType, callback, false);
+            }
+        }
+        each(ANIME_EVENTS, function(eventName) {
+            val("hb" + eventName, [ "$app", function($app) {
+                return {
+                    link: [ "scope", "el", "alias", function(scope, el, alias) {
+                        var bindOnce = scope.$isBindONce(alias.value);
+                        function unlisten() {
+                            offAnime(el, eventName, handle);
                         }
-                    };
-                } ]
-            };
+                        function handle(evt) {
+                            if (evt.currentTarget.nodeName.toLowerCase() === "a") {
+                                evt.preventDefault();
+                            }
+                            scope.$event = evt;
+                            bindOnce && unlisten();
+                            if (evt.target === el) {
+                                $app.interpolate(scope, alias.value);
+                                scope.$apply();
+                            }
+                            return false;
+                        }
+                        onAnime(el, eventName, handle);
+                        scope.$on("$destroy", unlisten);
+                    } ]
+                };
+            } ], "event");
+        });
+        each(UI_EVENTS, function(eventName) {
+            val("hb" + eventName.charAt(0).toUpperCase() + eventName.substr(1), [ "$app", function($app) {
+                return {
+                    link: [ "scope", "el", "alias", function(scope, el, alias) {
+                        var bindOnce = scope.$isBindOnce(alias.value);
+                        function unlisten() {
+                            hb.off(el, eventName, handle);
+                        }
+                        function handle(evt) {
+                            if (evt.currentTarget.nodeName.toLowerCase() === "a") {
+                                evt.preventDefault();
+                            }
+                            scope.$event = evt;
+                            bindOnce && unlisten();
+                            $app.interpolate(scope, alias.value);
+                            scope.$apply();
+                            return false;
+                        }
+                        hb.on(el, eventName, handle);
+                        scope.$on("$destroy", unlisten);
+                    } ]
+                };
+            } ], "event");
         });
     });
-    //! node_modules/hbjs/src/hb/module.js
-    /*!
- import hbd.app
- import hbd.model
- import hbd.events
- import hb.directive
- */
-    define("module", [ "hb", "hb.compiler", "hb.scope", "hb.val", "injector", "interpolator", "removeHTMLComments", "each", "ready", "hb.debug", "hb.eventStash" ], function(hb, compiler, scope, val, injector, interpolator, removeHTMLComments, each, ready, debug, events) {
-        events.READY = "ready";
-        events.RESIZE = "resize";
-        var modules = {};
-        function Module(name) {
-            var self = this;
-            self.name = name;
-            var rootEl;
-            var bootstraps = [];
-            var _injector = this.injector = injector();
-            var _interpolator = this.interpolator = interpolator(_injector);
-            var _compiler = compiler(self);
-            var compile = _compiler.compile;
-            var interpolate = _interpolator.invoke;
-            var injectorVal = _injector.val.bind(_injector);
-            var rootScope = scope(interpolate);
-            rootScope.$ignoreInterpolateErrors = true;
-            window.addEventListener("resize", function() {
-                rootScope && rootScope.$broadcast(events.RESIZE);
-            });
-            injectorVal("$rootScope", rootScope);
-            _injector.preProcessor = function(key, value) {
-                if (value && value.isClass) {
-                    return _injector.instantiate(value);
-                }
-            };
-            function findScope(el) {
-                if (!el) {
-                    return null;
-                }
-                if (el.scope) {
-                    return el.scope;
-                }
-                return findScope(el.parentNode);
-            }
-            function bootstrap(el, options) {
-                if (el) {
-                    for (var i in options) {
-                        if (options.hasOwnProperty(i)) {
-                            val(i, options[i]);
-                        }
-                    }
-                    val.init(this);
-                    self.element(el);
-                    while (bootstraps.length) {
-                        _injector.invoke(bootstraps.shift(), self);
-                    }
-                    self.fire(events.READY, self);
-                    rootScope.$broadcast(events.HB_READY, self);
-                    rootScope.$apply();
-                }
-            }
-            function addChild(parentEl, htmlStr, overrideScope, data, prepend) {
-                if (!htmlStr) {
-                    return;
-                }
-                if (parentEl !== rootEl && rootEl.contains && !rootEl.contains(parentEl)) {
-                    throw new Error(debug.errors.E12, rootEl);
-                }
-                var scope = overrideScope || findScope(parentEl), child;
-                if (prepend) {
-                    parentEl.insertAdjacentHTML("afterbegin", removeHTMLComments(htmlStr));
-                    child = parentEl.children[0];
-                } else {
-                    parentEl.insertAdjacentHTML("beforeend", removeHTMLComments(htmlStr));
-                    child = parentEl.children[parentEl.children.length - 1];
-                }
-                return compileEl(child, overrideScope || scope, !!overrideScope, data);
-            }
-            function compileEl(el, scope, sameScope, data) {
-                var s = sameScope && scope || scope.$new(), i;
-                if (data) {
-                    for (i in data) {
-                        if (data.hasOwnProperty(i)) {
-                            s[i] = data[i];
-                        }
-                    }
-                }
-                _compiler.link(el, s);
-                compile(el, scope);
-                return el;
-            }
-            function removeChild(childEl) {
-                var list;
-                if (childEl.scope) {
-                    childEl.scope.$destroy();
-                    childEl.scope = null;
-                } else {
-                    list = childEl.querySelectorAll(name + "-id");
-                    each(list, removeChild);
-                }
-                childEl.remove();
-            }
-            function element(el) {
-                if (typeof el !== "undefined") {
-                    rootEl = el;
-                    _compiler.link(rootEl, rootScope);
-                    compile(rootEl, rootScope);
-                }
-                return rootEl;
-            }
-            function service(name, ClassRef) {
-                if (ClassRef === undefined) {
-                    return injectorVal(name);
-                }
-                ClassRef.isClass = true;
-                return injectorVal(name, ClassRef);
-            }
-            self.events = events;
-            self.bindingMarkup = [ "{{", "}}" ];
-            self.elements = {};
-            self.bootstrap = bootstrap;
-            self.findScope = findScope;
-            self.addChild = addChild;
-            self.removeChild = removeChild;
-            self.compile = compileEl;
-            self.interpolate = interpolate;
-            self.invoke = _injector.invoke.bind(_injector);
-            self.element = element;
-            self.val = injectorVal;
-            self.factory = injectorVal;
-            self.service = service;
-            self.template = injectorVal;
-            self.parseBinds = function(scope, str) {
-                return _compiler.parseBinds(str, scope);
-            };
-        }
-        return function(name, forceNew) {
-            if (!name) {
-                throw debug.errors.E8;
-            }
-            var app = modules[name] = !forceNew && modules[name] || new Module(name);
-            if (!app.val("$app")) {
-                app.val("$app", app);
-                app.val("$window", window);
-                setTimeout(function() {
-                    ready(function() {
-                        var el = document.querySelector("[" + name + "-app]");
-                        if (el) {
-                            app.bootstrap(el);
-                        }
-                    });
-                });
-            }
-            return app;
+    //! node_modules/hbjs/src/hb/hb.js
+    define("hb", function() {
+        var hb = {
+            debug: {},
+            plugins: {},
+            filters: {},
+            errors: {},
+            directives: {}
         };
-    });
-    //! node_modules/hbjs/src/hb/directives/model.js
-    internal("hbd.model", [ "hb.directive", "resolve", "query", "hb.debug", "throttle" ], function(directive, resolve, query, debug, throttle) {
-        directive("hbModel", function() {
-            var $ = query;
-            return {
-                link: [ "scope", "el", "alias", function(scope, el, alias) {
-                    var $el = $(el);
-                    scope.$watch(alias.value, setValue);
-                    function getProp() {
-                        if (el.hasOwnProperty("value") || el.__proto__.hasOwnProperty("value")) {
-                            return "value";
-                        } else if (el.hasOwnProperty("innerText") || el.__proto__.hasOwnProperty("innerText")) {
-                            return "innerText";
-                        }
-                    }
-                    function setValue(value) {
-                        value = value === undefined ? "" : value;
-                        el[getProp()] = value;
-                    }
-                    function getValue() {
-                        return el[getProp()] || "";
-                    }
-                    function eventHandler(evt) {
-                        resolve(scope).set(alias.value, getValue());
-                        var change = el.getAttribute("hb-change");
-                        if (change) {
-                            scope.$eval(change);
-                        }
-                        scope.$apply();
-                    }
-                    $el.bind("change keyup blur input onpropertychange", throttle(eventHandler, 10));
-                    scope.$on("$destroy", function() {
-                        $el.unbindAll();
-                    });
-                } ]
-            };
-        });
-    });
-    //! node_modules/hbjs/src/utils/query/event/bind.js
-    internal("query.bind", [ "query" ], function(query) {
-        query.fn.bind = query.fn.on = function(events, handler) {
-            events = events.match(/\w+/gim);
-            var i = 0, event, len = events.length;
-            while (i < len) {
-                event = events[i];
-                this.each(function(index, el) {
-                    if (el.attachEvent) {
-                        el["e" + event + handler] = handler;
-                        el[event + handler] = function() {
-                            el["e" + event + handler](window.event);
-                        };
-                        el.attachEvent("on" + event, el[event + handler]);
-                    } else {
-                        el.addEventListener(event, handler, false);
-                    }
-                    if (!el.eventHolder) {
-                        el.eventHolder = [];
-                    }
-                    el.eventHolder[el.eventHolder.length] = [ event, handler ];
-                });
-                i += 1;
-            }
-            return this;
-        };
-    });
-    //! node_modules/hbjs/src/utils/query/query.js
-    define("query", function() {
-        function Query(selector, context) {
-            this.init(selector, context);
-        }
-        var queryPrototype = Query.prototype = Object.create(Array.prototype);
-        var eqRx = /:eq\((\-?\d+)\)$/;
-        function parseEQFilter(scope, selector) {
-            var match, count;
-            match = selector.indexOf(":eq(");
-            if (match !== -1) {
-                match = selector.match(eqRx);
-                selector = selector.replace(eqRx, "");
-                count = match && match[1] !== undefined ? Number(match[1]) : -1;
-                var nodes = scope.context.querySelectorAll(selector);
-                if (count !== undefined) {
-                    if (nodes[count]) {
-                        scope.push(nodes[count]);
-                    }
-                    return true;
-                }
-            }
-            return false;
-        }
-        queryPrototype.selector = "";
-        function getElementClass(context) {
-            var win = window;
-            if (context) {
-                if (context.parentWindow) {
-                    win = context.parentWindow;
-                } else if (context.defaultWindow) {
-                    win = context.defaultWindow;
-                }
-            }
-            return win.Element;
-        }
-        queryPrototype.init = function(selector, context) {
-            this.context = context;
-            var ElementClass = getElementClass(context);
-            if (typeof selector === "string") {
-                if (selector.substr(0, 1) === "<" && selector.substr(selector.length - 1, 1) === ">") {
-                    this.parseHTML(selector);
-                } else {
-                    this.parseSelector(selector, context);
-                }
-            } else if (selector instanceof Array) {
-                this.parseArray(selector);
-            } else if (selector instanceof ElementClass) {
-                this.parseElement(selector);
-            }
-        };
-        queryPrototype.parseHTML = function(html) {
-            var container = document.createElement("div");
-            container.innerHTML = html;
-            this.length = 0;
-            this.parseArray(container.children);
-        };
-        queryPrototype.parseSelector = function(selector, context) {
-            var ElementClass = getElementClass(context);
-            var i, nodes, len;
-            this.selector = selector;
-            if (context instanceof ElementClass) {
-                this.context = context;
-            } else if (context instanceof Query) {
-                this.context = context[0];
-            } else if (context && context.nodeType === 9) {
-                this.context = context;
+        var ON_STR = "on";
+        hb.on = function(el, eventName, handler) {
+            if (el.attachEvent) {
+                el.attachEvent(ON_STR + eventName, el[eventName + handler]);
             } else {
-                this.context = document;
-            }
-            if (!parseEQFilter(this, selector)) {
-                nodes = this.context.querySelectorAll(selector);
-                len = nodes.length;
-                i = 0;
-                this.length = 0;
-                while (i < len) {
-                    this.push(nodes[i]);
-                    i += 1;
-                }
+                el.addEventListener(eventName, handler, false);
             }
         };
-        queryPrototype.parseArray = function(list) {
-            var ElementClass = (this.context.parentWindow || this.context.defaultView).Element;
-            var i = 0, len = list.length;
-            this.length = 0;
-            while (i < len) {
-                if (list[i] instanceof ElementClass) {
-                    this.push(list[i]);
-                }
-                i += 1;
-            }
-        };
-        queryPrototype.parseElement = function(element) {
-            this.length = 0;
-            this.push(element);
-        };
-        queryPrototype.toString = function() {
-            if (this.length) {
-                return this[0].outerHTML;
-            }
-        };
-        queryPrototype.each = function(fn) {
-            var i = 0, len = this.length, result;
-            while (i < len) {
-                result = fn.apply(this[i], [ i, this[i] ]);
-                if (result === false) {
-                    break;
-                }
-                i += 1;
-            }
-            return this;
-        };
-        var query = function(selector, context) {
-            for (var n in query.fn) {
-                if (query.fn.hasOwnProperty(n)) {
-                    queryPrototype[n] = query.fn[n];
-                    delete query.fn[n];
-                }
-            }
-            return new Query(selector, context);
-        };
-        query.fn = {};
-        return query;
-    });
-    //! node_modules/hbjs/src/utils/query/focus/cursor.js
-    //! pattern /("|')query\1/
-    //! import query.val
-    internal("query.cursor", [ "query" ], function(query) {
-        query.fn.getCursorPosition = function() {
-            if (this.length === 0) {
-                return -1;
-            }
-            return query(this, this.context).getSelectionStart();
-        };
-        query.fn.setCursorPosition = function(position) {
-            if (this.length === 0) {
-                return this;
-            }
-            return query(this, this.context).setSelection(position, position);
-        };
-        query.fn.getSelection = function() {
-            if (this.length === 0) {
-                return -1;
-            }
-            var s = query(this, this.context).getSelectionStart();
-            var e = query(this, this.context).getSelectionEnd();
-            return this[0].value.substring(s, e);
-        };
-        query.fn.getSelectionStart = function() {
-            if (this.length === 0) {
-                return -1;
-            }
-            var input = this[0];
-            var pos = input.value.length;
-            if (input.createTextRange) {
-                var r = document.selection.createRange().duplicate();
-                r.moveEnd("character", input.value.length);
-                if (r.text === "") {
-                    pos = input.value.length;
-                } else {
-                    pos = input.value.lastIndexOf(r.text);
-                }
-            } else if (typeof input.selectionStart !== "undefined") {
-                pos = input.selectionStart;
-            }
-            return pos;
-        };
-        query.fn.getSelectionEnd = function() {
-            if (this.length === 0) {
-                return -1;
-            }
-            var input = this[0];
-            var pos = input.value.length;
-            if (input.createTextRange) {
-                var r = document.selection.createRange().duplicate();
-                r.moveStart("character", -input.value.length);
-                if (r.text === "") {
-                    pos = input.value.length;
-                }
-                pos = input.value.lastIndexOf(r.text);
-            } else if (typeof input.selectionEnd !== "undefined") {
-                pos = input.selectionEnd;
-            }
-            return pos;
-        };
-        query.fn.setSelection = function(selectionStart, selectionEnd) {
-            if (this.length === 0) {
-                return this;
-            }
-            var input = this[0];
-            if (input.createTextRange) {
-                var range = input.createTextRange();
-                range.collapse(true);
-                range.moveEnd("character", selectionEnd);
-                range.moveStart("character", selectionStart);
-                range.select();
-            } else if (input.setSelectionRange) {
-                input.setSelectionRange(selectionStart, selectionEnd);
-            }
-            return this;
-        };
-        query.fn.setSelectionRange = function(range) {
-            var element = query(this, this.context);
-            switch (range) {
-              case "start":
-                element.setSelection(0, 0);
-                break;
-
-              case "end":
-                element.setSelection(element.val().length, element.val().length);
-                break;
-
-              case true:
-              case "all":
-                element.setSelection(0, element.val().length);
-                break;
-            }
-            return this;
-        };
-        query.fn.select = function() {
-            this.setSelectionRange(true);
-            return this;
-        };
-    });
-    //! node_modules/hbjs/src/utils/query/modify/val.js
-    internal("query.val", [ "query" ], function(query) {
-        query.fn.val = function(value) {
-            var el, result, i, len, options;
-            if (this.length) {
-                el = this[0];
-                if (arguments.length) {
-                    el.value = value;
-                } else {
-                    if (el.nodeName === "SELECT" && el.multiple) {
-                        result = [];
-                        i = 0;
-                        options = el.options;
-                        len = options.length;
-                        while (i < len) {
-                            if (options) {
-                                result.push(options[i].value || options[0].text);
-                            }
-                        }
-                        return result.length === 0 ? null : result;
-                    }
-                    return el.value;
-                }
-            }
-        };
-    });
-    //! node_modules/hbjs/src/utils/query/focus/focus.js
-    //! pattern /("|')query\1/
-    internal("query.focus", [ "query" ], function(query) {
-        query.fn.focus = function(val) {
-            this.each(function(index, el) {
-                el.focus();
-            });
-            return this;
-        };
-    });
-    //! node_modules/hbjs/src/utils/query/mutate/replace.js
-    //! pattern /(\w+|\))\.replace\(/
-    //! pattern /("|')query\1/
-    internal("query.replace", [ "query" ], function(query) {
-        query.fn.replace = function(val) {
-            if (this.length) {
-                var el = this[0];
-                if (arguments.length > 0) {
-                    this.each(function(index, el) {
-                        el.innerHTML = val;
-                    });
-                }
-                return el.innerHTML;
-            }
-        };
-    });
-    //! node_modules/hbjs/src/utils/query/event/unbind.js
-    internal("query.unbind", [ "query" ], function(query) {
-        query.fn.unbind = query.fn.off = function(events, handler) {
-            if (arguments.length === 1) {
-                this.unbindAll(events);
+        hb.off = function(el, eventName, handler) {
+            if (el.detachEvent) {
+                el.detachEvent(ON_STR + eventName, el[eventName + handler]);
             } else {
-                events = events.match(/\w+/gim);
-                var i = 0, event, len = events.length;
-                while (i < len) {
-                    event = events[i];
-                    this.each(function(index, el) {
-                        if (el.detachEvent) {
-                            el.detachEvent("on" + event, el[event + handler]);
-                            el[event + handler] = null;
-                        } else {
-                            el.removeEventListener(event, handler, false);
-                        }
-                    });
-                    i += 1;
-                }
+                el.removeEventListener(eventName, handler, false);
             }
-            return this;
         };
-    });
-    //! node_modules/hbjs/src/utils/query/event/unbindAll.js
-    internal("query.unbindAll", [ "query" ], function(query) {
-        query.fn.unbindAll = function(event) {
-            var scope = this;
-            scope.each(function(index, el) {
-                if (el.eventHolder) {
-                    var removed = 0, handler;
-                    for (var i = 0; i < el.eventHolder.length; i++) {
-                        if (!event || el.eventHolder[i][0] === event) {
-                            event = el.eventHolder[i][0];
-                            handler = el.eventHolder[i][1];
-                            if (el.detachEvent) {
-                                el.detachEvent("on" + event, el[event + handler]);
-                                el[event + handler] = null;
-                            } else {
-                                el.removeEventListener(event, handler, false);
-                            }
-                            el.eventHolder.splice(i, 1);
-                            removed += 1;
-                            i -= 1;
-                        }
-                    }
-                }
-            });
-            return scope;
-        };
-    });
-    //! node_modules/hbjs/src/hb/utils/directive.js
-    internal("hb.directive", [ "hb.val" ], function(val) {
-        return val;
+        return hb;
     });
     //! node_modules/hbjs/src/hb/utils/val.js
-    internal("hb.val", [ "cache", "each" ], function(cache, each) {
+    define("hb.val", [ "cache", "each" ], function(cache, each) {
         var $cache = cache();
         var val = function(name, fn) {
             if (!$cache.has(name)) {
@@ -1301,7 +307,7 @@
                 handler = arguments[1];
                 done = arguments[2];
             } else {
-                params = arguments[1] || {};
+                params = arguments[1] === null || arguments[1] === undefined ? {} : arguments[1];
                 handler = arguments[2];
                 done = arguments[3];
             }
@@ -1378,257 +384,32 @@
                     next = iter;
                 }
             }
-            iterate();
+            var syncReturnVal = iterate();
+            if (syncReturnVal !== undefined) {
+                return syncReturnVal;
+            }
+            if (!done && params) {
+                return params;
+            }
         }
         return each;
     });
-    //! node_modules/hbjs/src/utils/data/resolve.js
-    define("resolve", [ "isUndefined" ], function(isUndefined) {
-        function Resolve(data) {
-            this.data = data || {};
-        }
-        var proto = Resolve.prototype;
-        proto.get = function(path, delimiter) {
-            path = path || "";
-            var arr = path.split(delimiter || "."), space = "", i = 0, len = arr.length;
-            var data = this.data;
-            while (i < len) {
-                space = arr[i];
-                data = data[space];
-                if (data === undefined) {
-                    break;
-                }
-                i += 1;
-            }
-            return data;
-        };
-        proto.set = function(path, value, delimiter) {
-            if (isUndefined(path)) {
-                throw new Error('Resolve requires "path"');
-            }
-            var arr = path.split(delimiter || "."), space = "", i = 0, len = arr.length - 1;
-            var data = this.data;
-            while (i < len) {
-                space = arr[i];
-                if (data[space] === undefined) {
-                    data = data[space] = {};
-                } else {
-                    data = data[space];
-                }
-                i += 1;
-            }
-            if (arr.length > 0) {
-                data[arr.pop()] = value;
-            }
-            return this.data;
-        };
-        proto.clear = function() {
-            var d = this.data;
-            for (var e in d) {
-                if (d.hasOwnProperty(e)) {
-                    delete d[e];
-                }
-            }
-        };
-        proto.path = function(path) {
-            return this.set(path, {});
-        };
-        var resolve = function(data) {
-            return new Resolve(data);
-        };
-        return resolve;
-    });
-    //! node_modules/hbjs/src/utils/validators/isUndefined.js
-    define("isUndefined", function() {
-        var isUndefined = function(val) {
-            return typeof val === "undefined";
-        };
-        return isUndefined;
-    });
-    //! node_modules/hbjs/src/hb/debug/debug.js
-    internal("hb.debug", function() {
-        var errors = {
-            E0: "",
-            E1: "",
-            E2: "",
-            E3: "",
-            E4: "",
-            E5: "",
-            E6a: "",
-            E6b: "",
-            E7: "",
-            E8: "",
-            E9: "",
-            E10: "",
-            E11: "",
-            E12: ""
-        };
-        var fn = function() {};
-        var statItem = {
-            clear: fn,
-            next: fn,
-            inc: fn,
-            dec: fn
-        };
-        var db = {
-            log: fn,
-            info: fn,
-            warn: fn,
-            error: fn,
-            stat: function() {
-                return statItem;
-            },
-            getStats: fn,
-            flushStats: fn
-        };
-        for (var i in errors) {
-            errors[i] = i;
-        }
-        return {
-            ignoreErrors: true,
-            log: fn,
-            info: fn,
-            warn: fn,
-            register: function() {
-                return db;
-            },
-            liveStats: fn,
-            getStats: fn,
-            logStats: fn,
-            stats: fn,
-            errors: errors
-        };
-    });
-    //! node_modules/hbjs/src/utils/async/throttle.js
-    define("throttle", function() {
-        var throttle = function(func, threshhold, scope) {
-            threshhold = threshhold || 250;
-            var last, deferTimer;
-            return function() {
-                var context = scope || this;
-                var now = +new Date(), args = arguments;
-                if (last && now < last + threshhold) {
-                    clearTimeout(deferTimer);
-                    deferTimer = setTimeout(function() {
-                        last = now;
-                        func.apply(context, args);
-                    }, threshhold);
-                } else {
-                    last = now;
-                    func.apply(context, args);
-                }
-            };
-        };
-        return throttle;
-    });
-    //! node_modules/hbjs/src/hb/directives/events.js
-    //! pattern /hb\-(click|mousedown|mouseup|keydown|keyup|touchstart|touchend|touchmove|animation\-start|animation\-end)\=/
-    internal("hbd.events", [ "hb", "hb.val", "each" ], function(hb, val, each) {
-        var UI_EVENTS = "click mousedown mouseup mouseover mouseout keydown keyup touchstart touchend touchmove".split(" ");
-        var pfx = [ "webkit", "moz", "MS", "o", "" ];
-        var ANIME_EVENTS = "AnimationStart AnimationEnd".split(" ");
-        function onAnime(element, eventType, callback) {
-            for (var p = 0; p < pfx.length; p++) {
-                if (!pfx[p]) {
-                    eventType = eventType.toLowerCase();
-                }
-                element.addEventListener(pfx[p] + eventType, callback, false);
-            }
-        }
-        function offAnime(element, eventType, callback) {
-            for (var p = 0; p < pfx.length; p++) {
-                if (!pfx[p]) {
-                    eventType = eventType.toLowerCase();
-                }
-                element.addEventListener(pfx[p] + eventType, callback, false);
-            }
-        }
-        each(ANIME_EVENTS, function(eventName) {
-            val("hb" + eventName, [ "$app", function($app) {
-                return {
-                    link: [ "scope", "el", "alias", function(scope, el, alias) {
-                        var bindOnce = scope.$isBindONce(alias.value);
-                        function unlisten() {
-                            offAnime(el, eventName, handle);
-                        }
-                        function handle(evt) {
-                            if (evt.currentTarget.nodeName.toLowerCase() === "a") {
-                                evt.preventDefault();
-                            }
-                            scope.$event = evt;
-                            bindOnce && unlisten();
-                            if (evt.target === el) {
-                                $app.interpolate(scope, alias.value);
-                                scope.$apply();
-                            }
-                            return false;
-                        }
-                        onAnime(el, eventName, handle);
-                        scope.$on("$destroy", unlisten);
-                    } ]
-                };
-            } ], "event");
-        });
-        each(UI_EVENTS, function(eventName) {
-            val("hb" + eventName.charAt(0).toUpperCase() + eventName.substr(1), [ "$app", function($app) {
-                return {
-                    link: [ "scope", "el", "alias", function(scope, el, alias) {
-                        var bindOnce = scope.$isBindOnce(alias.value);
-                        function unlisten() {
-                            hb.off(el, eventName, handle);
-                        }
-                        function handle(evt) {
-                            if (evt.currentTarget.nodeName.toLowerCase() === "a") {
-                                evt.preventDefault();
-                            }
-                            scope.$event = evt;
-                            bindOnce && unlisten();
-                            $app.interpolate(scope, alias.value);
-                            scope.$apply();
-                            return false;
-                        }
-                        hb.on(el, eventName, handle);
-                        scope.$on("$destroy", unlisten);
-                    } ]
-                };
-            } ], "event");
-        });
-    });
-    //! node_modules/hbjs/src/hb/hb.js
-    internal("hb", function() {
-        var hb = {
-            debug: {},
-            plugins: {},
-            filters: {},
-            errors: {},
-            directives: {}
-        };
-        var ON_STR = "on";
-        hb.on = function(el, eventName, handler) {
-            if (el.attachEvent) {
-                el.attachEvent(ON_STR + eventName, el[eventName + handler]);
-            } else {
-                el.addEventListener(eventName, handler, false);
-            }
-        };
-        hb.off = function(el, eventName, handler) {
-            if (el.detachEvent) {
-                el.detachEvent(ON_STR + eventName, el[eventName + handler]);
-            } else {
-                el.removeEventListener(eventName, handler, false);
-            }
-        };
-        return hb;
+    //! node_modules/hbjs/src/hb/utils/directive.js
+    define("hb.directive", [ "hb.val" ], function(val) {
+        return val;
     });
     //! node_modules/hbjs/src/hb/utils/compiler.js
-    internal("hb.compiler", [ "each", "fromDashToCamel", "hb.template", "toDOM", "hb.debug" ], function(each, fromDashToCamel, template, toDOM, debug) {
+    define("hb.compiler", [ "each", "fromDashToCamel", "hb.template", "toDOM", "extend", "hb.debug" ], function(each, fromDashToCamel, template, toDOM, extend, debug) {
         function Compiler($app) {
+            var compileCount = 0;
+            var compileRegistry = {};
             var ID = $app.name + "-id";
             var injector = $app.injector;
             var interpolator = $app.interpolator;
             var self = this;
             var bindParseRx;
             var transclude = /<hb\-transclude><\/hb-transclude>/i;
+            var isUrl = /(\w|\-)+\.\w+$/;
             function extend(target, source) {
                 var args = Array.prototype.slice.call(arguments, 0), i = 1, len = args.length, item, j;
                 while (i < len) {
@@ -1662,7 +443,7 @@
                 if (str && o) {
                     bindParseRx = bindParseRx || new RegExp($app.bindingMarkup[0] + "(.*?)" + $app.bindingMarkup[1], "mg");
                     str = str.replace(bindParseRx, function(a, b) {
-                        var r = interpolator.invoke(o, cleanBindOnce(b, o, watchId), true);
+                        var r = interpolator.invoke(o, cleanBindOnce(b, o, watchId), debug.ignoreErrors);
                         return typeof r === "string" || typeof r === "number" ? r : typeof r === "object" ? JSON.stringify(r, null, 2) : "";
                     });
                 }
@@ -1699,24 +480,36 @@
                     el.scope = scope;
                 }
             }
-            function findDirectives(el, scope) {
-                var attributes = el.attributes, attrs = [ {
-                    name: el.nodeName.toLowerCase(),
-                    value: ""
-                } ], attr, returnVal = [], i, len = attributes.length, name, directiveFn, leftovers = [];
+            function findDirectives(el, scope, compileId) {
+                var attributes = el.attributes, nodeName = el.nodeName.toLowerCase(), attrs = [], attr, returnVal = [], i, len = attributes.length, leftovers = [], rLen = 0;
+                el.compiledIds = el.compiledIds || {};
+                el.compiled = el.compiled || {};
+                if (!el.compiled[nodeName]) {
+                    attrs[0] = {
+                        name: nodeName,
+                        value: ""
+                    };
+                }
                 for (i = 0; i < len; i += 1) {
                     attr = attributes[i];
-                    attrs.push({
-                        name: attr.name,
-                        value: el.getAttribute(attr.name)
-                    });
+                    if (!el.compiledIds[compileId] && !el.compiled[attr.name]) {
+                        attrs.push({
+                            name: attr.name,
+                            value: el.getAttribute(attr.name)
+                        });
+                    }
                 }
                 len = attrs.length;
                 for (i = 0; i < len; i += 1) {
                     attr = attrs[i];
+                    rLen = returnVal.length;
                     getDirectiveFromAttr(attr, returnVal, leftovers);
+                    if (returnVal.length !== rLen) {
+                        el.compiledIds[compileId] = 1;
+                        el.compiled[attr.name] = 1;
+                    }
                 }
-                processLeftovers(el, leftovers);
+                processLeftovers(el, leftovers, scope);
                 return returnVal;
             }
             function getDirectiveFromAttr(attr, returnVal, leftovers) {
@@ -1734,11 +527,14 @@
                     leftovers.push(attr);
                 }
             }
-            function processLeftovers(el, leftovers) {
+            function processLeftovers(el, leftovers, scope) {
                 var len = leftovers.length, attr;
                 for (var i = 0; i < len; i += 1) {
                     attr = leftovers[i];
-                    el.setAttribute(attr.name, parseBinds(attr.value, el.scope || scope));
+                    if (!el.compiled[attr.name] && attr.value.indexOf("{{") !== -1) {
+                        el.compiled[attr.name] = 1;
+                        el.setAttribute(attr.name, parseBinds(attr.value, el.scope || scope));
+                    }
                 }
             }
             function createChildScope(parentScope, el, isolated, data) {
@@ -1761,7 +557,7 @@
                         });
                         scope.$w[0].node = node;
                     }
-                } else if (!node.getAttribute(ID) && node.childNodes.length) {
+                } else if (node && node.getAttribute && !node.getAttribute(ID) && node.childNodes.length) {
                     each(node.childNodes, scope, createWatchers);
                 }
             }
@@ -1775,26 +571,32 @@
                 }
                 return false;
             }
-            function compile(el, scope) {
-                if (!el.compiled) {
-                    el.compiled = true;
-                    each(el.childNodes, el, removeComments);
-                    var directives = findDirectives(el, scope), links = [];
-                    if (directives && directives.length) {
-                        each(directives, {
-                            el: el,
-                            scope: scope,
-                            links: links
-                        }, compileDirective);
-                        each(links, el, invokeLink);
-                    }
+            function compile(el, scope, compileId) {
+                compileId = compileId || function() {
+                    compileCount += 1;
+                    return compileCount;
+                }();
+                if (!compileRegistry[compileId]) {
+                    compileRegistry[compileId] = 1;
+                    debug.warn("COMPILE " + compileId);
                 }
                 if (el) {
+                    if (el.nodeType !== 8) {
+                        var directives = findDirectives(el, scope, compileId), links = [];
+                        if (directives && directives.length) {
+                            each(directives, {
+                                el: el,
+                                scope: scope,
+                                links: links
+                            }, compileDirective);
+                            each(links, el, invokeLink);
+                        }
+                    }
                     scope = el.scope || scope;
                     var i = 0, len = el.children && el.children.length || 0;
                     while (i < len) {
-                        if (!el.children[i].compiled) {
-                            compile(el.children[i], scope);
+                        if (!el.children[i].compiledIds || !el.children[i].compiledIds[compileId]) {
+                            compile(el.children[i], scope, compileId);
                         }
                         i += 1;
                     }
@@ -1808,10 +610,22 @@
                 each(el.childNodes, scope, createWatchers);
             }
             function copyAttr(attr, index, list, params) {
+                if (attr.name === "class") {
+                    var classes = attr.value.split(" ");
+                    for (var i = 0; i < classes.length; i += 1) {
+                        params.el.classList.add(classes[i]);
+                    }
+                    return;
+                }
+                if (attr.name === "hb-class") {
+                    var hbcls = params.el.getAttribute("hb-class") || "";
+                    hbcls = hbcls && hbcls.replce(/\{|\}/g, "");
+                    var val = attr.value.replace(/\{|\}/g, "");
+                    attr.value = "{" + (hbcls ? hbcls + "," : "") + val + "}";
+                }
                 params.el.setAttribute(attr.name, attr.value);
-                var leftovers = [];
-                getDirectiveFromAttr(attr, params.directives, leftovers);
-                processLeftovers(params.el, leftovers);
+                var el = params.el;
+                compile(el, el.scope, el.nodeName.toLowerCase() + ":replace-" + compileCount);
             }
             function compileDirective(directive, index, list, params) {
                 var str = "string";
@@ -1834,6 +648,9 @@
                     }
                 }
                 if (!el.scope && options.scope) {
+                    if (options.widget) {
+                        el.setAttribute("data-ng-non-bindable", "");
+                    }
                     scope = createChildScope(parentScope, el, typeof directive.options.scope === "object", directive.options.scope);
                 }
                 if (options.tpl) {
@@ -1862,21 +679,44 @@
                     if (transclude.test(tpl)) {
                         tpl = tpl.replace(transclude, el.innerHTML);
                     }
+                    if (isUrl.test(tpl)) {
+                        console.warn("partial url not found for '" + tpl + "'.");
+                    }
                     el.innerHTML = tpl;
-                }
-                if ($app.preLink) {
-                    $app.preLink(el, directive);
                 }
                 links.push(directive);
             }
             self.link = link;
             self.compile = compile;
             self.parseBinds = parseBinds;
-            self.preLink = null;
         }
         return function(module) {
             return new Compiler(module);
         };
+    });
+    //! node_modules/hbjs/src/hb/directives/class.js
+    define("hbClass", [ "hb.directive" ], function(directive) {
+        directive("hbClass", function() {
+            return {
+                link: [ "scope", "el", "alias", "$app", function(scope, el, alias, $app) {
+                    var watchId = scope.$watch(function hbClass() {
+                        scope.$handleBindOnce(alias, "value", watchId);
+                        this.expr = alias.value;
+                        var classes = $app.interpolate(scope, alias.value, true), contained;
+                        for (var e in classes) {
+                            if (classes.hasOwnProperty(e)) {
+                                contained = el.classList.contains(e);
+                                if (classes[e]) {
+                                    el.classList.add(e);
+                                } else if (contained) {
+                                    el.classList.remove(e);
+                                }
+                            }
+                        }
+                    });
+                } ]
+            };
+        });
     });
     //! node_modules/hbjs/src/utils/formatters/fromDashToCamel.js
     define("fromDashToCamel", function() {
@@ -1890,24 +730,36 @@
     });
     //! node_modules/hbjs/src/hb/utils/template.js
     define("hb.template", [ "http", "hb.debug", "each" ], function(http, debug, each) {
+        var loading = {};
+        function onLoad($app, url) {
+            while (loading[url].length) {
+                loading[url].shift()($app.template(url));
+            }
+            delete loading[url];
+        }
         function loadTemplate($app, url, callback) {
+            var isLoading = !!loading[url];
+            loading[url] = loading[url] || [];
+            loading[url].push(callback);
             if (!$app.template(url)) {
-                var u = ($app.template("templatesBaseUrl") || "") + url;
-                debug.info("load template", u);
-                http.get({
-                    url: u,
-                    success: function(r) {
-                        $app.template(url, r.data);
-                        callback($app.template(url));
-                    },
-                    error: function() {
-                        $app.template(url, '<div class="e404">OOPS! "' + u + '" - 404 Not Found!</div>');
-                        callback($app.template(url));
-                    }
-                });
+                if (!isLoading) {
+                    var u = ($app.template("templatesBaseUrl") || "") + url;
+                    debug.info("load template", u);
+                    http.get({
+                        url: u,
+                        success: function(r) {
+                            $app.template(url, r.data);
+                            onLoad($app, url);
+                        },
+                        error: function() {
+                            $app.template(url, '<div class="e404">OOPS! "' + u + '" - 404 Not Found!</div>');
+                            onLoad($app, url);
+                        }
+                    });
+                }
                 return;
             }
-            callback($app.template(url));
+            onLoad($app, url);
         }
         function loadTemplateItem(item, index, list, $app, next) {
             loadTemplate($app, item, next);
@@ -1922,59 +774,6 @@
         return {
             get: loadTemplates
         };
-    });
-    //! node_modules/hbjs/src/hb/directives/attr/class.js
-    internal("hb.attr.class", [ "hb.directive" ], function(directive) {
-        directive("class", function() {
-            return {
-                link: [ "scope", "el", "$app", function(scope, el, $app) {
-                    var len = el.classList.length, bindClasses = [], watchId;
-                    for (var i = 0; i < len; i += 1) {
-                        if (el.classList[i].indexOf($app.bindingMarkup[0]) !== -1) {
-                            bindClasses.push({
-                                bindOnce: scope.$isBindOnce(el.classList[i]),
-                                bind: el.classList[i],
-                                last: ""
-                            });
-                            el.classList.remove(el.classList[i]);
-                            i -= 1;
-                            len -= 1;
-                        }
-                    }
-                    function classAttr() {
-                        this.expr = "class";
-                        var i, len = bindClasses.length, result, item;
-                        for (i = 0; i < len; i += 1) {
-                            item = bindClasses[i];
-                            result = $app.parseBinds(scope, item.bind);
-                            if (result !== item.last && item.last) {
-                                el.classList.remove(item.last);
-                            }
-                            if (result) {
-                                el.classList.add(result);
-                            }
-                            if (item.bindOnce) {
-                                bindClasses.splice(i, 1);
-                                i -= 1;
-                                if (!bindClasses.length) {
-                                    scope.$unwatch(watchId);
-                                }
-                            }
-                            item.last = result;
-                        }
-                    }
-                    if (bindClasses.length) {
-                        watchId = scope.$watch(classAttr);
-                    }
-                    scope.$on("$destroy", function() {
-                        bindClasses.length = 0;
-                        scope = null;
-                        el = null;
-                        $app = null;
-                    });
-                } ]
-            };
-        });
     });
     //! node_modules/hbjs/src/utils/ajax/http.js
     define("http", [ "extend" ], function(extend) {
@@ -2263,34 +1062,26 @@
         };
         return toArray;
     });
-    //! src/widgets/bootstrap.js
-    internal("app", [ "module", "dispatcher", "ready", "loader", "findScriptUrls" ], function(module, dispatcher, ready, loader, findScriptUrls) {
-        dispatcher(exports);
-        var name = "widgets";
-        var app = dispatcher(module("app"));
-        app.preLink = function(el, directive) {
-            if (directive.alias.name.indexOf("hb-") === -1 && directive.alias.name.indexOf("-") !== -1) {
-                el.classList.add(directive.alias.name);
-                el.setAttribute("ng-non-bindable", "");
+    //! node_modules/hbjs/src/utils/validators/isArguments.js
+    define("isArguments", function() {
+        var toString = function() {
+            var value = [];
+            for (var e in this) {
+                if (this.hasOwnProperty(e)) {
+                    value.push("" + e);
+                }
             }
+            return "[" + value.join(", ") + "]";
         };
-        var assets = [ name + ".css" ];
-        var urls = findScriptUrls(new RegExp(name + "(.min)?.js$"), "i");
-        if (urls.length) {
-            var scriptUrl = urls[0].substring(0, urls[0].lastIndexOf("/"));
-            var len = assets.length;
-            for (var i = 0; i < len; i += 1) {
-                assets[i] = scriptUrl + "/" + assets[i];
+        var isArguments = function(value) {
+            var str = String(value);
+            var isArguments = str === "[object Arguments]";
+            if (!isArguments) {
+                isArguments = str !== "[object Array]" && value !== null && typeof value === "object" && typeof value.length === "number" && value.length >= 0 && (!value.callee || toString.call(value.callee) === "[object Function]");
             }
-            loader.load(assets, function() {
-                ready(function() {
-                    app.bootstrap(document.body);
-                    delete exports.$$;
-                    exports.fire("ready", app);
-                });
-            });
-        }
-        return app;
+            return isArguments;
+        };
+        return isArguments;
     });
     //! node_modules/hbjs/src/utils/validators/isArray.js
     define("isArray", function() {
@@ -2303,6 +1094,13 @@
             return val ? !!val.__isArray : false;
         };
         return isArray;
+    });
+    //! node_modules/hbjs/src/utils/validators/isUndefined.js
+    define("isUndefined", function() {
+        var isUndefined = function(val) {
+            return typeof val === "undefined";
+        };
+        return isUndefined;
     });
     //! node_modules/hbjs/src/utils/validators/isDate.js
     define("isDate", function() {
@@ -2318,6 +1116,60 @@
         };
         return isRegExp;
     });
+    //! node_modules/hbjs/src/hb/debug/debug.js
+    define("hb.debug", function() {
+        var errors = {
+            E0: "",
+            E1: "",
+            E2: "",
+            E3: "",
+            E4: "",
+            E5: "",
+            E6a: "",
+            E6b: "",
+            E7: "",
+            E8: "",
+            E9: "",
+            E10: "",
+            E11: "",
+            E12: ""
+        };
+        var fn = function() {};
+        var statItem = {
+            clear: fn,
+            next: fn,
+            inc: fn,
+            dec: fn
+        };
+        var db = {
+            log: fn,
+            info: fn,
+            warn: fn,
+            error: fn,
+            stat: function() {
+                return statItem;
+            },
+            getStats: fn,
+            flushStats: fn
+        };
+        for (var i in errors) {
+            errors[i] = i;
+        }
+        return {
+            ignoreErrors: true,
+            log: fn,
+            info: fn,
+            warn: fn,
+            register: function() {
+                return db;
+            },
+            liveStats: fn,
+            getStats: fn,
+            logStats: fn,
+            stats: fn,
+            errors: errors
+        };
+    });
     //! node_modules/hbjs/src/utils/formatters/toDOM.js
     define("toDOM", function() {
         var htmlToDOM = function(htmlStr) {
@@ -2328,7 +1180,7 @@
         return htmlToDOM;
     });
     //! node_modules/hbjs/src/hb/scope.js
-    internal("hb.scope", [ "hb.debug", "apply" ], function(debug, apply) {
+    define("hb.scope", [ "hb.debug", "apply" ], function(debug, apply) {
         var DESTROY = "$destroy";
         var EMIT = "$emit";
         var BROADCAST = "$broadcast";
@@ -2400,7 +1252,7 @@
                         } else {
                             watcher.listenerFn(newValue, oldValue === initWatchVal ? newValue : oldValue, scope);
                         }
-                        if (oldValue === initWatchVal) {
+                        if (watcher.last === initWatchVal) {
                             watcher.last = oldValue = undefined;
                         }
                         dirty = true;
@@ -2604,9 +1456,13 @@
             }
             self.$$clearPhase();
         };
-        scopePrototype.$eval = function(expr, locals) {
+        scopePrototype.$eval = function(expr, execScope, $data) {
             var self = this;
-            return self.$interpolate(locals || self, expr, debug.ignoreErrors);
+            var s = execScope || self;
+            s.$data = $data;
+            var result = self.$interpolate(execScope || self, expr, debug.ignoreErrors);
+            delete s.$data;
+            return result;
         };
         scopePrototype.$apply = function(expr) {
             var self = this;
@@ -2910,17 +1766,176 @@
             return injector;
         };
     });
-    //! node_modules/hbjs/src/utils/parsers/functionArgs.js
-    define("functionArgs", function() {
-        var rx1 = /\(.*?\)/;
-        var rx2 = /([\$\w])+/gm;
-        return function(fn) {
-            var str = (fn || "") + "";
-            return str.match(rx1)[0].match(rx2) || [];
+    //! node_modules/hbjs/src/hb/module.js
+    /*!
+ import hbd.app
+ import hbd.model
+ import hbEvents
+ import hb.directive
+ */
+    define("module", [ "hb", "hb.compiler", "hb.scope", "hb.val", "injector", "interpolator", "removeHTMLComments", "each", "ready", "hb.debug", "hb.eventStash", "dispatcher" ], function(hb, compiler, scope, val, injector, interpolator, removeHTMLComments, each, ready, debug, events, dispatcher) {
+        events.READY = "ready";
+        events.RESIZE = "resize";
+        var mod;
+        function Module() {
+            var self = this;
+            self.name = "h";
+            self.bootWait = 10;
+            var rootEl;
+            var _injector = this.injector = injector();
+            var _interpolator = this.interpolator = interpolator(_injector);
+            var _compiler = compiler(self);
+            var compile = _compiler.compile;
+            var interpolate = _interpolator.invoke;
+            var injectorVal = _injector.val.bind(_injector);
+            var rootScope = scope(interpolate);
+            var docReady = false;
+            var onAppReady = function() {
+                val.init(self);
+                if (!docReady) {
+                    debug.warn("--- BOOTSTRAP BEFORE docReady ---");
+                }
+                if (!self.element()) {
+                    debug.log("%cINITIAL COMPILE", "color:#F60");
+                    self.element(document.body);
+                } else {
+                    debug.log("%cRE-COMPILE", "color:#F60");
+                    compile(rootEl, rootScope);
+                }
+                rootScope.$apply();
+            };
+            ready(function() {
+                debug.log("docReady");
+                docReady = true;
+            });
+            rootScope.$ignoreInterpolateErrors = true;
+            window.addEventListener("resize", function() {
+                rootScope && rootScope.$broadcast(events.RESIZE);
+            });
+            injectorVal("$rootScope", rootScope);
+            _injector.preProcessor = function(key, value) {
+                if (value && value.isClass) {
+                    return _injector.instantiate(value);
+                }
+            };
+            function findScope(el) {
+                if (!el) {
+                    return null;
+                }
+                if (el.scope) {
+                    return el.scope;
+                }
+                return findScope(el.parentNode);
+            }
+            function bootstrap(bootName, options, callback) {
+                debug.log("bootstrap " + bootName, options);
+                if (options) {
+                    for (var i in options) {
+                        if (options.hasOwnProperty(i)) {
+                            debug.warn('val("' + i + '", ' + (typeof options[i] === "string" ? '"' + options[i] + '"' : options[1]) + ");");
+                            val(i, options[i]);
+                        }
+                    }
+                    val.init(self);
+                }
+                onAppReady();
+                if (callback) {
+                    callback();
+                }
+            }
+            function addChild(parentEl, htmlStr, overrideScope, data, prepend) {
+                if (!htmlStr) {
+                    return;
+                }
+                if (parentEl !== rootEl && rootEl.contains && !rootEl.contains(parentEl)) {
+                    throw new Error(debug.errors.E12, rootEl);
+                }
+                var scope = overrideScope || findScope(parentEl), child;
+                if (prepend) {
+                    parentEl.insertAdjacentHTML("afterbegin", removeHTMLComments(htmlStr));
+                    child = parentEl.children[0];
+                } else {
+                    parentEl.insertAdjacentHTML("beforeend", removeHTMLComments(htmlStr));
+                    child = parentEl.children[parentEl.children.length - 1];
+                }
+                return compileEl(child, overrideScope || scope, !!overrideScope, data);
+            }
+            function compileEl(el, scope, sameScope, data) {
+                var s = sameScope && scope || scope.$new(), i;
+                if (data) {
+                    for (i in data) {
+                        if (data.hasOwnProperty(i)) {
+                            s[i] = data[i];
+                        }
+                    }
+                }
+                _compiler.link(el, s);
+                compile(el, scope);
+                return el;
+            }
+            function removeChild(childEl) {
+                var list;
+                if (childEl.scope) {
+                    childEl.scope.$destroy();
+                    childEl.scope = null;
+                } else {
+                    list = childEl.querySelectorAll(self.name + "-id");
+                    each(list, removeChild);
+                }
+                childEl.remove();
+            }
+            function element(el) {
+                if (typeof el !== "undefined") {
+                    rootEl = el;
+                    _compiler.link(rootEl, rootScope);
+                    compile(rootEl, rootScope);
+                }
+                return rootEl;
+            }
+            function service(name, ClassRef) {
+                if (ClassRef === undefined) {
+                    return injectorVal(name);
+                }
+                ClassRef.isClass = true;
+                return injectorVal(name, ClassRef);
+            }
+            self.events = events;
+            self.bindingMarkup = [ "{{", "}}" ];
+            self.elements = {};
+            self.bootstrap = bootstrap;
+            self.findScope = findScope;
+            self.addChild = addChild;
+            self.removeChild = removeChild;
+            self.compile = compileEl;
+            self.interpolate = interpolate;
+            self.invoke = _injector.invoke.bind(_injector);
+            self.element = element;
+            self.val = injectorVal;
+            self.factory = injectorVal;
+            self.service = service;
+            self.template = injectorVal;
+            self.parseBinds = function(scope, str) {
+                return _compiler.parseBinds(str, scope);
+            };
+            dispatcher(self);
+            mod = self;
+        }
+        return function(name) {
+            if (!name) {
+                throw Error("Bootstrap requires name");
+            }
+            debug.log("register " + name);
+            var app = mod || new Module();
+            if (!app.val("$app")) {
+                app.val("$app", app);
+                app.val("$window", window);
+            }
+            return app;
         };
     });
     //! node_modules/hbjs/src/hb/utils/interpolator.js
-    internal("interpolator", [ "each", "removeLineBreaks", "removeExtraSpaces", "apply" ], function(each, removeLineBreaks, removeExtraSpaces, apply) {
+    define("interpolator", [ "each", "removeLineBreaks", "removeExtraSpaces", "apply" ], function(each, removeLineBreaks, removeExtraSpaces, apply) {
+        var undefRx = / of undefined$/;
         function Interpolator(injector) {
             var self = this;
             var ths = "this";
@@ -2932,6 +1947,7 @@
             var fixStrRefScope;
             var fixStrRefMatches = [];
             var fixStrRefCount;
+            var getInjection = injector.getInjection.bind(injector);
             var errorHandler = function(er, extraMessage, data) {
                 if (window.console && console.warn) {
                     console.warn(extraMessage + "\n" + er.message + "\n" + (er.stack || er.stacktrace || er.backtrace), data);
@@ -2986,7 +2002,7 @@
             function revertTick(val, index, list) {
                 list[index] = val.split("`*`").join(":");
             }
-            function parseFilter(str, scope) {
+            function parseFilter(str, scope, ignoreErrors) {
                 if (str.indexOf("|") !== -1 && str.match(parseRx)) {
                     str = str.replace("||", "~~");
                     var parts = str.trim().split("|");
@@ -3006,7 +2022,9 @@
                         args = parts[1];
                         each(args, revertTick);
                     }
-                    each(args, scope, injector.getInjection);
+                    for (var i = 0; i < args.length; i += 1) {
+                        args[i] = interpolate(scope, args[i], ignoreErrors);
+                    }
                     return {
                         filter: function(value) {
                             args.unshift(value);
@@ -3030,15 +2048,15 @@
                 if (!str) {
                     return;
                 }
-                filter = parseFilter(str, scope);
+                filter = parseFilter(str, scope, ignoreErrors);
                 if (filter) {
                     str = filter.str;
                 }
                 str = fixStrReferences(str, scope);
                 result = apply(new fn("var result; try { result = " + str + "; } catch(er) { result = er; } finally { return result; }"), scope);
                 if (result) {
-                    if (typeof result === "object" && (result.hasOwnProperty("stack") || result.hasOwnProperty("stacktrace") || result.hasOwnProperty("backtrace"))) {
-                        if (!ignoreErrors) {
+                    if (result instanceof Error) {
+                        if (!ignoreErrors && !undefRx.test(result.message)) {
                             interpolateError(result, scope, str, errorHandler);
                         }
                         result = undefined;
@@ -3104,12 +2122,11 @@
         };
         var DOMContentLoaded;
         function invokeCallbacks() {
-            var i = 0, len = callbacks.length;
-            while (i < len) {
-                callbacks[i]();
-                i += 1;
-            }
+            var ary = callbacks.slice();
             callbacks.length = 0;
+            for (var i = 0; i < ary.length; i += 1) {
+                ary[i]();
+            }
         }
         if (doc[ADD_EVENT_LISTENER]) {
             DOMContentLoaded = function() {
@@ -3143,25 +2160,7 @@
         return events;
     });
     //! node_modules/hbjs/src/utils/async/dispatcher.js
-    define("dispatcher", [ "apply", "isFunction" ], function(apply, isFunction) {
-        function Event(type) {
-            this.type = type;
-            this.defaultPrevented = false;
-            this.propagationStopped = false;
-            this.immediatePropagationStopped = false;
-        }
-        Event.prototype.preventDefault = function() {
-            this.defaultPrevented = true;
-        };
-        Event.prototype.stopPropagation = function() {
-            this.propagationStopped = true;
-        };
-        Event.prototype.stopImmediatePropagation = function() {
-            this.immediatePropagationStopped = true;
-        };
-        Event.prototype.toString = function() {
-            return this.type;
-        };
+    define("dispatcher", [ "apply", "isFunction", "dispatcherEvent" ], function(apply, isFunction, Event) {
         function validateEvent(e) {
             if (!e) {
                 throw Error("event cannot be undefined");
@@ -3173,41 +2172,54 @@
             }
             target = target || {};
             var listeners = {};
-            function off(event, callback) {
-                validateEvent(event);
-                var index, list;
-                list = listeners[event];
+            function getIndexOfListener(event, callback) {
+                var list = listeners[event];
                 if (list) {
-                    if (callback) {
-                        index = list.indexOf(callback);
-                        if (index !== -1) {
-                            list.splice(index, 1);
+                    for (var i = 0; i < list.length; i += 1) {
+                        if (list[i].cb === callback) {
+                            return i;
                         }
-                    } else {
-                        list.length = 0;
                     }
                 }
+                return -1;
             }
-            function on(event, callback) {
+            function off(event, callback) {
+                validateEvent(event);
+                var index = getIndexOfListener(event, callback), list = listeners[event];
+                if (index !== -1) {
+                    list.splice(index, 1);
+                }
+            }
+            function on(event, callback, priority) {
                 if (isFunction(callback)) {
                     validateEvent(event);
                     listeners[event] = listeners[event] || [];
-                    listeners[event].push(callback);
+                    listeners[event].push({
+                        cb: callback,
+                        priority: priority !== undefined ? priority : 10
+                    });
+                    listeners[event].sort(prioritySort);
                     return function() {
                         off(event, callback);
                     };
                 }
             }
             on.dispatcher = true;
-            function once(event, callback) {
+            function once(event, callback, priority) {
                 if (isFunction(callback)) {
                     validateEvent(event);
                     function fn() {
                         off(event, fn);
                         apply(callback, scope || target, arguments);
                     }
-                    return on(event, fn);
+                    return on(event, fn, priority);
                 }
+            }
+            function prioritySort(a, b) {
+                return a.priority - b.priority;
+            }
+            function mapListeners(item, number, list) {
+                list[number] = item.cb;
             }
             function getListeners(event, strict) {
                 validateEvent(event);
@@ -3220,6 +2232,7 @@
                     if (listeners[event]) {
                         list = listeners[event].concat(list);
                     }
+                    list.map(mapListeners);
                     return list;
                 }
                 return listeners;
@@ -3260,13 +2273,46 @@
         };
         return dispatcher;
     });
+    //! node_modules/hbjs/src/utils/async/dispatcher-event.js
+    define("dispatcherEvent", function() {
+        function Event(type) {
+            this.type = type;
+            this.defaultPrevented = false;
+            this.propagationStopped = false;
+            this.immediatePropagationStopped = false;
+        }
+        Event.prototype.preventDefault = function() {
+            this.defaultPrevented = true;
+        };
+        Event.prototype.stopPropagation = function() {
+            this.propagationStopped = true;
+        };
+        Event.prototype.stopImmediatePropagation = function() {
+            this.immediatePropagationStopped = true;
+        };
+        Event.prototype.toString = function() {
+            return this.type;
+        };
+        return Event;
+    });
     //! node_modules/hbjs/src/utils/browser/loader.js
     define("loader", [ "toArray" ], function(toArray) {
         return function(doc) {
             var env, head, pending = {}, pollCount = 0, queue = {
                 css: [],
                 js: []
-            }, styleSheets = doc.styleSheets;
+            }, styleSheets = doc.styleSheets, allFinished = [], loadedUrls = {};
+            gatherUrls();
+            window.addEventListener("load", gatherUrls);
+            function gatherUrls() {
+                var url, tags = document.querySelectorAll("script,style,link");
+                for (var i = 0; i < tags.length; i += 1) {
+                    url = tags[i].src || tags[i].href;
+                    if (url && !loadedUrls[url]) {
+                        loadedUrls[url] = 1;
+                    }
+                }
+            }
             function createNode(name, attrs) {
                 var node = doc.createElement(name), attr;
                 for (attr in attrs) {
@@ -3288,6 +2334,17 @@
                         pending[type] = null;
                         queue[type].length && load(type);
                     }
+                    allFinish();
+                }
+            }
+            function getPendingCount() {
+                return queue.css.length + (pending.css ? 1 : 0) + queue.js.length + (pending.js ? 1 : 0);
+            }
+            function allFinish() {
+                if (!getPendingCount()) {
+                    for (var i = 0; i < allFinished.length; i += 1) {
+                        allFinished[i]();
+                    }
                 }
             }
             function getEnv() {
@@ -3304,22 +2361,37 @@
                 env || getEnv();
                 if (urls) {
                     urls = typeof urls === "string" ? [ urls ] : urls.concat();
-                    if (isCSS || env.async || env.gecko || env.opera) {
-                        queue[type].push({
-                            urls: urls,
-                            callback: callback,
-                            obj: obj,
-                            context: context
-                        });
-                    } else {
-                        for (i = 0, len = urls.length; i < len; ++i) {
+                    for (var i = 0; i < urls.length; i += 1) {
+                        if (loadedUrls[urls[i]]) {
+                            if (window.console && window.console.warn) {
+                                console.warn("**** SKIPPED DUPLICATE URL [" + urls[i] + "]");
+                            }
+                            urls.splice(i, 1);
+                            i -= 1;
+                        } else {
+                            loadedUrls[urls[i]] = 1;
+                        }
+                    }
+                    if (urls.length) {
+                        if (isCSS || env.async || env.gecko || env.opera) {
                             queue[type].push({
-                                urls: [ urls[i] ],
-                                callback: i === len - 1 ? callback : null,
+                                urls: urls,
+                                callback: callback,
                                 obj: obj,
                                 context: context
                             });
+                        } else {
+                            for (i = 0, len = urls.length; i < len; ++i) {
+                                queue[type].push({
+                                    urls: [ urls[i] ],
+                                    callback: i === len - 1 ? callback : null,
+                                    obj: obj,
+                                    context: context
+                                });
+                            }
                         }
+                    } else if (callback) {
+                        callback();
                     }
                 }
                 if (pending[type] || !(p = pending[type] = queue[type].shift())) {
@@ -3407,6 +2479,11 @@
                 }
             }
             return {
+                allFinished: function(fn) {
+                    allFinished.push(fn);
+                    allFinish();
+                },
+                getPendingCount: getPendingCount,
                 css: function(urls, callback, obj, context) {
                     load("css", urls, callback, obj, context);
                 },
@@ -3441,7 +2518,7 @@
         }(window.document);
     });
     //! node_modules/hbjs/src/utils/browser/findScriptUrls.js
-    internal("findScriptUrls", [], function() {
+    define("findScriptUrls", [], function() {
         return function(pattern) {
             var type = typeof pattern, i, tags = document.querySelectorAll("script"), matches = [], src;
             for (i = 0; i < tags.length; i++) {
@@ -3457,373 +2534,10 @@
             return matches;
         };
     });
-    //! node_modules/hbjs/src/hb/debug/debugDev.js
-    //! pattern /hb\-errors-debug\b/
-    internal("hb.debug.dev", [ "hb.debug", "hb.debug.logs", "hb.debug.stats", "apply" ], function(debug, debugLogs, debugStats, apply) {
-        var errors = debug.errors;
-        errors.E1 = "Trying to assign multiple scopes to the same dom element is not permitted.", 
-        errors.E2 = "Unable to find element", errors.E3 = "Exceeded max digests of ", errors.E4 = "parent element not found in %o", 
-        errors.E5 = "property is not of type object", errors.E6a = 'Error evaluating: "', 
-        errors.E6b = '" against %o', errors.E7 = "$digest already in progress.", errors.E8 = "Name required to instantiate module", 
-        errors.E9 = "Injection not found for ", errors.E10 = "This element has already been compiled", 
-        errors.E11 = "Watch cannot have a function of null or undefined", errors.E12 = "parent element not found in %o";
-        function createLog(name) {
-            return function() {
-                if (window.console && console[name]) {
-                    apply(console[name], console, arguments);
-                }
-            };
-        }
-        debugLogs(debug);
-        debugStats(debug);
-        debug.ignoreErrors = false;
-        debug.log = createLog("log");
-        debug.info = createLog("info");
-        debug.warn = createLog("warn");
-        return debug;
-    });
-    //! node_modules/hbjs/src/hb/debug/log.js
-    define("hb.debug.logs", [ "hb.debug.item", "hb.debug.colors", "apply" ], function(debugItem, colors, apply) {
-        function logger(model) {
-            var logs = {};
-            function register(name, color) {
-                logs[name] = logs[name] || new debugItem(name, color);
-                return logs[name];
-            }
-            function enable(name) {
-                var success = false, a;
-                for (var i = 0, len = arguments.length; i < len; i += 1) {
-                    a = arguments[i];
-                    if (logs[a]) {
-                        logs[a].enabled = success = true;
-                    }
-                }
-                return success;
-            }
-            function log() {
-                if (model.enabled && this.enabled) {
-                    var args = Array.prototype.slice.call(arguments);
-                    var n = this.name;
-                    args = [ "%c" + n + "::", "color:" + this.color ].concat(args);
-                    if (window.console && console[this.mode]) {
-                        apply(console[this.mode], console, args);
-                    }
-                }
-            }
-            function logMethodFactory(mode) {
-                return function() {
-                    this.mode = mode;
-                    apply(log, this, arguments);
-                };
-            }
-            debugItem.prototype.log = logMethodFactory("log");
-            debugItem.prototype.info = logMethodFactory("info");
-            debugItem.prototype.warn = logMethodFactory("warn");
-            debugItem.prototype.error = logMethodFactory("error");
-            model.log = enable;
-            model.enabled = true;
-            model.register = register;
-            return model;
-        }
-        return logger;
-    });
-    //! node_modules/hbjs/src/hb/debug/debugItem.js
-    internal("hb.debug.item", [ "hb.debug.colors" ], function(colors) {
-        function DebugItem(name, color) {
-            this.name = name;
-            this.mode = "log";
-            this.color = color || colors(name);
-        }
-        return DebugItem;
-    });
-    //! node_modules/hbjs/src/hb/debug/colors.js
-    internal("hb.debug.colors", function() {
-        var colors = [ "#3F51B5", "#4CAF50", "#FF9800", "#f93b39", "#de9c1b", "#008bf5", "#708bca", "#87a5ae", "#ff6092" ];
-        var cache = {};
-        var index = 0;
-        function nextColor() {
-            var color = colors[index];
-            index += 1;
-            index %= colors.length;
-            return color;
-        }
-        function getColor(name) {
-            return cache[name] = cache[name] || nextColor();
-        }
-        return getColor;
-    });
-    //! node_modules/hbjs/src/hb/debug/stats.js
-    define("hb.debug.stats", [ "hb.debug.item", "hb.debug.stats.item", "consoleGraph", "hb.debug.colors" ], function(debugItem, statsItem, consoleGraph, colors) {
-        function statsBehavior(model) {
-            var statsData = {};
-            var liveStatsList = [];
-            var liveStatsIntv = 0;
-            var imgs = {};
-            var debugEl;
-            function liveStats(name) {
-                for (var i = 0, len = arguments.length; i < len; i += 1) {
-                    name = arguments[i];
-                    if (liveStatsList.indexOf(name) === -1) {
-                        liveStatsList.push(name);
-                        if (!liveStatsIntv) {
-                            debugEl = document.getElementById("hb-debug-stats");
-                            if (!debugEl) {
-                                debugEl = document.createElement("div");
-                                debugEl.id = "debug-stats";
-                                debugEl.style.position = "absolute";
-                                debugEl.style.top = "0px";
-                                debugEl.style.left = "0px";
-                                debugEl.style.background = "#FFF";
-                                document.body.appendChild(debugEl);
-                            }
-                            liveStatsIntv = setInterval(function() {
-                                for (var i = 0, len = liveStatsList.length; i < len; i += 1) {
-                                    logItemStats(statsData[liveStatsList[i]], true, liveStatsList[i]);
-                                }
-                            }, 1e3);
-                        }
-                    }
-                }
-            }
-            function getStats() {
-                return statsData[this.name] = statsData[this.name] || {};
-            }
-            function stat(name, color) {
-                var stats = this.getStats();
-                return stats[name] = stats[name] || new statsItem(name, color || this.color);
-            }
-            function flushStats(name) {
-                if (name) {
-                    this.getStats()[name].clear();
-                }
-                statsData[this.name] = {};
-            }
-            function logStats() {
-                var i;
-                for (i in statsData) {
-                    if (statsData.hasOwnProperty(i)) {
-                        logItemStats.call(this, statsData[i]);
-                    }
-                }
-                return " ";
-            }
-            function getImg(name) {
-                var img;
-                if (!imgs[name]) {
-                    img = new Image();
-                    img.style.display = "block";
-                    debugEl.appendChild(img);
-                    imgs[name] = img;
-                }
-                return imgs[name];
-            }
-            function logItemStats(stats, live, label) {
-                var i, len, url, img;
-                for (i in stats) {
-                    if (stats.hasOwnProperty(i)) {
-                        len = stats[i].data.length;
-                        if (len) {
-                            if (live) {
-                                if (stats[i].dirty) {
-                                    stats[i].dirty = false;
-                                    url = consoleGraph.graph(stats[i].data, label + ":: " + i, stats[i].color);
-                                    img = getImg.call(this, i);
-                                    img.src = url;
-                                }
-                            } else {
-                                console.graph(stats[i].data, 0, i);
-                            }
-                        }
-                    }
-                }
-            }
-            function clearStats(name, statName) {
-                statsData[name][statName].clear();
-            }
-            debugItem.prototype.stat = stat;
-            debugItem.prototype.getStats = getStats;
-            debugItem.prototype.flushStats = flushStats;
-            model.stats = liveStats;
-            model.getStats = function() {
-                return statsData;
-            };
-            model.logStats = logStats;
-            model.clearStats = clearStats;
-            return model;
-        }
-        return statsBehavior;
-    });
-    //! node_modules/hbjs/src/hb/debug/statsItem.js
-    internal("hb.debug.stats.item", [ "hb.debug.colors" ], function(colors) {
-        function Stat(name, color) {
-            this.name = name;
-            this.color = color || colors(name);
-            this.clear();
-        }
-        Stat.prototype.clear = function() {
-            this.index = -1;
-            this.data = this.data || [];
-            this.data.length = 0;
-            this.dirty = true;
-            this.next();
-        };
-        Stat.prototype.next = function() {
-            this.index += 1;
-            this.data[this.index] = 0;
-            this.dirty = true;
-        };
-        Stat.prototype.inc = function(n) {
-            this.data[this.index] += n || 1;
-            this.dirty = true;
-        };
-        Stat.prototype.dec = function(n) {
-            this.data[this.index] -= n || 1;
-            this.dirty = true;
-        };
-        Stat.prototype.set = function(n) {
-            this.data[this.index] = n;
-            this.dirty = true;
-        };
-        return Stat;
-    });
-    //! node_modules/hbjs/src/hb/debug/consoleGraph.js
-    define("consoleGraph", [ "apply" ], function(apply) {
-        if (!window.console || !window.console.log) {
-            return;
-        }
-        var canvas, context, height = 18, padding = 1, fontSize = 10, width = 400, labelWidth = 100, api = {};
-        canvas = document.createElement("canvas");
-        canvas.height = height + "";
-        canvas.width = width + "";
-        context = canvas.getContext("2d");
-        if (document.body) {
-            document.body.appendChild(canvas);
-        }
-        canvas.style.cssText = "position: absolute; left: -" + width + "px; background-color:#FFF;";
-        context.font = fontSize + "px Arial";
-        var _graph = function(imageURL, height, width, label) {
-            console.log("%c ", "" + "font-size: 0px;" + "border-left:100px solid #FFF; " + "padding-left: " + width + "px;" + "padding-bottom: " + height + "px;" + 'background: url("' + imageURL + '"), ' + "-webkit-linear-gradient(#CCC, #CCC);" + "");
-            console.log(label || "	");
-        };
-        function graph(data, label, color) {
-            var len = data.length;
-            var graphWidth = width - labelWidth;
-            var units = graphWidth / len;
-            var offset = 0;
-            var offsetLen = len - offset;
-            while (units < 2) {
-                offset += 1;
-                offsetLen = len - offset;
-                units = graphWidth / offsetLen;
-            }
-            var max = Math.max.apply(Math, data);
-            var barWidth = Math.min(units, 4);
-            barWidth = barWidth < 1 ? 1 : barWidth;
-            var h;
-            var hp = height - padding * 2;
-            var last = 0;
-            context.clearRect(0, 0, width, height);
-            context.fillStyle = color || "#999";
-            if (len > 1) {
-                for (var i = 0; i < offsetLen; i++) {
-                    last = data[offset + i];
-                    h = hp * (last / max);
-                    context.fillRect(labelWidth + i * barWidth, hp - h + padding, barWidth, h);
-                }
-            }
-            context.textBaseline = "middle";
-            context.fillStyle = color || "#333";
-            context.fillText(label, 2, height * .25);
-            context.fillText("  " + (len > 1 ? len + " / " + max + " / " + last : data[0]), 2, height * .75);
-            context.fillStyle = "#EFEFEF";
-            context.fillRect(0, height - 1, width, 1);
-            return canvas.toDataURL();
-        }
-        window.console.graph = function(data, max, label) {
-            var imgURL = graph(data, max, label);
-            _graph(imgURL, height, width, label);
-        };
-        api.graph = graph;
-        return api;
-    });
-    //! src/application/form-fields/input/bh-input.js
-    define("bhInput", [ "hb.directive" ], function(directive) {
-        directive("bhInput", function() {
-            return {
-                scope: true,
-                replace: true,
-                tpl: "<div class=\"mdl-textfield {{::field.classes}} mdl-js-textfield mdl-textfield--floating-label\" hb-alt=\"field.label\"> <input class=\"mdl-textfield__input\" hb-id=\"field.name\" type=\"text\" hb-pattern=\"field.pattern\"> <label class=\"mdl-textfield__label\" hb-for=\"field.name\">{{::field.label}} <span class=\"subtext\">{{::field.subtext}}</span></label> <span class=\"mdl-textfield__error\">{{::field.error}}</span></div>",
-                link: [ "scope", "el", "alias", function(scope, el, alias) {
-                    scope.field = scope.$eval(alias.value);
-                } ]
-            };
-        });
-    });
-    //! src/application/form-fields/radio/bh-radio.js
-    define("bhRadio", [ "hb.directive" ], function(directive) {
-        directive("bhRadio", function() {
-            return {
-                scope: true,
-                replace: true,
-                tpl: "<div class=\"mdl-textfield {{::field.classes}} mdl-js-textfield mdl-textfield--floating-label is-focused\" hb-alt=\"field.label\"> <label class=\"mdl-textfield__label\" hb-for=\"field.name\">{{::field.label}} <span class=\"subtext\">{{::field.subtext}}</span></label> <div hb-id=\"field.name\" hb-repeat=\"option in field.options\"> <label class=\"mdl-radio mdl-js-radio mdl-js-ripple-effect\" hb-for=\"option.name\"> <input type=\"radio\" hb-id=\"option.name\" class=\"mdl-radio__button\" hb-name=\"field.name\" hb-value=\"option.name\" hb-checked=\"option.selected\"> <span class=\"mdl-radio__label\">{{option.label}}</span> </label> </div></div>",
-                link: [ "scope", "el", "alias", function(scope, el, alias) {
-                    scope.field = scope.$eval(alias.value);
-                } ]
-            };
-        });
-    });
-    //! node_modules/hbjs/src/hb/directives/cloak.js
-    //! pattern /hb\-cloak(\s|\=|>)/
-    internal("hbd.cloak", [ "hb.directive", "hb.eventStash" ], function(directive, events) {
-        directive("hbCloak", function() {
-            return {
-                link: [ "scope", "el", "alias", function(scope, el, alias) {
-                    scope.$on(events.HB_READY, function() {
-                        el.removeAttribute(alias.name);
-                    });
-                } ]
-            };
-        });
-    });
-    //! node_modules/hbjs/src/hb/directives/html.js
-    //! pattern /hb\-html\=/
-    internal("hbd.html", [ "hb.directive" ], function(directive) {
-        directive("hbHtml", function() {
-            return {
-                link: [ "scope", "el", "alias", "$app", function(scope, el, alias, $app) {
-                    scope.$watch(alias.value, function(newVal) {
-                        while (scope.$c.length) {
-                            scope.$c.pop().$destroy();
-                        }
-                        el.innerHTML = newVal || "";
-                        $app.compile(el.children[0], scope);
-                    });
-                } ]
-            };
-        });
-    });
-    //! node_modules/hbjs/src/hb/directives/href.js
-    //! pattern /hb\-href\=/
-    internal("hbd.href", [ "hb.directive" ], function(directive) {
-        directive("hbHref", function() {
-            return {
-                link: [ "scope", "el", "alias", function(scope, el, alias) {
-                    var href = "href";
-                    scope.$watch(alias.value, function(newVal) {
-                        if (newVal) {
-                            el.setAttribute(href, newVal);
-                        } else {
-                            el.removeAttribute(href);
-                        }
-                    });
-                } ]
-            };
-        });
-    });
     //! node_modules/hbjs/src/hb/directives/attr.js
-    //! pattern /hb\-(src|alt|title|pattern|id|for|name|checked|disabled)\=/
+    //! pattern /hb\-(src|alt|title|pattern|id|for|name|checked|disabled|value|href)\=/
     define("hbAttr", [ "hb.directive" ], function(directive) {
-        var names = [ "src", "alt", "title", "pattern", "id", "for", "name", "checked", "disabled" ];
+        var names = [ "src", "alt", "title", "pattern", "id", "for", "name", "checked", "disabled", "value", "href", "placeholder", "content", "maxlength", "min", "max", "pattern" ];
         function generate(scope, el, alias) {
             var attr = alias.name.split("-").pop();
             scope.$watch(alias.value, function(newVal) {
@@ -3835,7 +2549,7 @@
             });
         }
         for (var i = 0; i < names.length; i += 1) {
-            var n = names[i];
+            var n = names[i] || "";
             directive("hb" + n.charAt(0).toUpperCase() + n.substr(1, n.length), function() {
                 return {
                     link: [ "scope", "el", "alias", generate ]
@@ -3843,9 +2557,62 @@
             });
         }
     });
+    //! node_modules/hbjs/src/hb/directives/attr/class.js
+    define("hb.attr.class", [ "hb.directive" ], function(directive) {
+        directive("class", function() {
+            return {
+                link: [ "scope", "el", "$app", function(scope, el, $app) {
+                    var len = el.classList.length, bindClasses = [], watchId;
+                    for (var i = 0; i < len; i += 1) {
+                        if (el.classList[i].indexOf($app.bindingMarkup[0]) !== -1) {
+                            bindClasses.push({
+                                bindOnce: scope.$isBindOnce(el.classList[i]),
+                                bind: el.classList[i],
+                                last: ""
+                            });
+                            el.classList.remove(el.classList[i]);
+                            i -= 1;
+                            len -= 1;
+                        }
+                    }
+                    function classAttr() {
+                        this.expr = "class";
+                        var i, len = bindClasses.length, result, item;
+                        for (i = 0; i < len; i += 1) {
+                            item = bindClasses[i];
+                            result = $app.parseBinds(scope, item.bind);
+                            if (result !== item.last && item.last) {
+                                el.classList.remove(item.last);
+                            }
+                            if (result) {
+                                el.classList.add(result);
+                            }
+                            if (item.bindOnce) {
+                                bindClasses.splice(i, 1);
+                                i -= 1;
+                                if (!bindClasses.length) {
+                                    scope.$unwatch(watchId);
+                                }
+                            }
+                            item.last = result;
+                        }
+                    }
+                    if (bindClasses.length) {
+                        watchId = scope.$watch(classAttr);
+                    }
+                    scope.$on("$destroy", function() {
+                        bindClasses.length = 0;
+                        scope = null;
+                        el = null;
+                        $app = null;
+                    });
+                } ]
+            };
+        });
+    });
     //! node_modules/hbjs/src/hb/directives/repeat.js
     //! pattern /hb\-repeat\=/
-    internal("hbd.repeat", [ "hb.directive", "each", "asyncRender", "hb.debug", "hb.eventStash" ], function(directive, each, asyncRender, debug, events) {
+    define("hbRepeat", [ "hb.directive", "each", "asyncRender", "hb.debug", "hb.eventStash", "filter", "apply", "debounce" ], function(directive, each, asyncRender, debug, events, filter, apply, debounce) {
         events.REPEAT_RENDER_CHUNK_COMPLETE = "repeat::render_chunk_complete";
         events.REPEAT_RENDER_COMPLETE = "repeat::render_complete";
         directive("hbRepeat", function() {
@@ -3856,15 +2623,22 @@
             }
             var db = debug.register("hb-repeat");
             var asyncEvents = db.stat("async events");
-            var splitInRx = /\s+in\s+/;
+            var pattern = /(\w+)\s+in\s+([\w\.]+)(\|(.*?)$)?$/;
             return {
                 link: [ "scope", "el", "alias", "attr", "$app", function(scope, el, alias, attr, $app) {
                     var template = el.children[0].outerHTML;
+                    var postDigest;
                     el.removeChild(el.children[0]);
                     var statement = alias.value;
-                    statement = statement.split(splitInRx);
+                    var match = statement.match(pattern);
+                    statement = [];
+                    if (match && match.length) {
+                        for (var i = 1; i < match.length; i += 1) {
+                            statement.push(match[i]);
+                        }
+                    }
                     each(statement, trimStrings);
-                    var itemName = statement[0], watch = statement[1];
+                    var itemName = statement[0], watch = statement[1], filterFn = statement[3] && statement[3].split(":");
                     var intv;
                     var intvAfter;
                     var currentList;
@@ -3963,7 +2737,7 @@
                         for (var i = 0, len = el.children.length; i < len; i += 1) {
                             e = el.children[i];
                             s = el.children[i].scope;
-                            if (s.$index === index) {
+                            if (s && s.$index === index) {
                                 return e;
                             }
                         }
@@ -3990,14 +2764,48 @@
                             removeUntil(0);
                         }
                     }
+                    function setHideShowClasses(index, active, inactive) {
+                        if (!el.children[index].classList.contains(active)) {
+                            el.children[index].classList.add(active);
+                            if (el.children[index].classList.contains(inactive)) {
+                                el.children[index].classList.remove(inactive);
+                            }
+                        }
+                    }
+                    function releasePost() {
+                        postDigest = null;
+                    }
+                    function onPostDigestFor$filter() {
+                        var fn = filterFn[0];
+                        var show = scope.$eval(filterFn[1]);
+                        var hide = scope.$eval(filterFn[2]);
+                        for (var i = 0; i < scope.$c.length; i += 1) {
+                            var val = scope.$c[i].$eval(fn);
+                            if (val) {
+                                setHideShowClasses(i, show, hide);
+                            } else if (!val) {
+                                setHideShowClasses(i, hide, show);
+                            }
+                        }
+                        releasePost();
+                    }
+                    function checkFoPost() {
+                        if (!postDigest) {
+                            postDigest = onPostDigestFor$filter;
+                            scope.$$postDigest(postDigest);
+                        }
+                    }
                     scope.$watch(watch, preRender, true);
+                    if (filterFn) {
+                        scope.$watch(checkFoPost);
+                    }
                     scope.$on("$destroy", destroy);
                 } ]
             };
         });
     });
     //! node_modules/hbjs/src/hb/utils/asyncRender.js
-    internal("asyncRender", [ "dispatcher", "hb.eventStash" ], function(dispatcher, events) {
+    define("asyncRender", [ "dispatcher", "hb.eventStash" ], function(dispatcher, events) {
         var UP = "up";
         var DOWN = "down";
         events.ASYNC_RENDER_CHUNK_END = "async::chunk_end";
@@ -4083,6 +2891,966 @@
                 return new AsyncRender();
             }
         };
+    });
+    //! node_modules/hbjs/src/utils/data/filter.js
+    define("filter", function() {
+        var filter = function(list, method) {
+            var i = 0, len, result = [], extraArgs, response;
+            if (arguments.length > 2) {
+                extraArgs = Array.prototype.slice.apply(arguments);
+                extraArgs.splice(0, 2);
+            }
+            if (list && list.length) {
+                len = list.length;
+                while (i < len) {
+                    response = method.apply(null, [ list[i], i, list ].concat(extraArgs));
+                    if (response) {
+                        result.push(list[i]);
+                    }
+                    i += 1;
+                }
+            } else {
+                for (i in list) {
+                    if (list.hasOwnProperty(i)) {
+                        response = method.apply(null, [ list[i], i, list ].concat(extraArgs));
+                        if (response) {
+                            result.push(list[i]);
+                        }
+                    }
+                }
+            }
+            return result;
+        };
+        return filter;
+    });
+    //! node_modules/hbjs/src/utils/async/debounce.js
+    define("debounce", function() {
+        var debounce = function(func, wait, scope) {
+            var timeout;
+            return function() {
+                var context = scope || this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    timeout = null;
+                    func.apply(context, args);
+                }, wait);
+                return function() {
+                    clearTimeout(timeout);
+                    timeout = null;
+                };
+            };
+        };
+        return debounce;
+    });
+    //! src/application/bhApp.js
+    internal("bhApp", [ "app", "hb.debug.dev", "hb.directive" ], function(app, debug, directive) {
+        exports.boot = function() {
+            app.bootstrap(document.body);
+        };
+        directive("bhApp", function() {
+            return {
+                scope: true,
+                link: [ "scope", "el", "attr", function(scope, el, attr) {
+                    scope.model = {
+                        title: "Becky For Health Signup Form",
+                        profile: {
+                            firstName: {
+                                name: "first_name",
+                                label: "First Name",
+                                pattern: "[A-Za-z]+",
+                                error: "Please enter your first name.",
+                                classes: ""
+                            },
+                            lastName: {
+                                name: "last_name",
+                                label: "Last Name",
+                                pattern: "[A-Za-z]+",
+                                error: "Please enter your last name.",
+                                classes: ""
+                            },
+                            email: {
+                                name: "email",
+                                label: "Email",
+                                pattern: "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}$",
+                                error: "Please enter a valid email address.",
+                                classes: ""
+                            },
+                            phone: {
+                                name: "phone",
+                                label: "Phone",
+                                subtext: "###-###-####",
+                                pattern: "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$",
+                                error: "Please enter a valid phone number.",
+                                classes: ""
+                            },
+                            age: {
+                                name: "age",
+                                label: "Age",
+                                pattern: "\\d+$",
+                                error: "You must be at least 13 years of age.",
+                                classes: "mdl-textfield-mini"
+                            },
+                            gender: {
+                                name: "gender",
+                                label: "Gender",
+                                options: [ {
+                                    name: "male",
+                                    label: "Male",
+                                    selected: true
+                                }, {
+                                    name: "female",
+                                    label: "Female"
+                                } ]
+                            },
+                            weight: {
+                                name: "weight",
+                                label: "Weight",
+                                pattern: "\\d+(lbs)?$",
+                                error: "Please enter your weight.",
+                                classes: "mdl-textfield-sml"
+                            },
+                            height: {
+                                name: "height",
+                                label: "Height",
+                                subtext: "(e:5ft 2in)",
+                                pattern: "d+ft(s+d+in)?$",
+                                error: "Please enter your height like (5ft 2in).",
+                                classes: "mdl-textfield-sml"
+                            },
+                            relationship: {
+                                name: "relationship",
+                                label: "Relationship Status",
+                                pattern: "[\\w\\s]+$",
+                                error: "Please describe your relationship status.",
+                                classes: "mdl-textfield-long"
+                            },
+                            mailingAddress: {
+                                name: "mailingAddress",
+                                label: "Mailing Address",
+                                pattern: "[\\w\\s\\.\\-]+$",
+                                error: "Please provide your maliing address",
+                                classes: ""
+                            },
+                            city: {
+                                name: "city",
+                                label: "City",
+                                pattern: "[\\w\\s]+$",
+                                error: "Please provide your City",
+                                classes: "mdl-textfield-med"
+                            },
+                            state: {
+                                name: "state",
+                                label: "State",
+                                pattern: "\\w+",
+                                error: "Please provide your state abreviation",
+                                classes: "mdl-textfield-mini"
+                            },
+                            zip: {
+                                name: "zip",
+                                label: "Zipcode",
+                                pattern: "\\d{5}(\\-\\d+)?$",
+                                error: "Please enter your zipcode",
+                                classes: "mdl-textfield-sml"
+                            },
+                            childrenAges: {
+                                name: "childrenAges",
+                                label: "Children/Ages",
+                                pattern: "",
+                                error: "Please enter your children's ages",
+                                classes: "mdl-textfield-sml"
+                            },
+                            pets: {
+                                name: "pets",
+                                label: "Pets",
+                                options: [ {
+                                    name: "no",
+                                    label: "No",
+                                    selected: true
+                                }, {
+                                    name: "yes",
+                                    label: "Yes"
+                                } ]
+                            },
+                            doYouSmoke: {
+                                name: "doYouSmoke",
+                                label: "Do you Smoke?",
+                                options: [ {
+                                    name: "no",
+                                    label: "No",
+                                    selected: true
+                                }, {
+                                    name: "yes",
+                                    label: "Yes"
+                                } ]
+                            },
+                            drinkAlcohol: {
+                                name: "drinkAlcohol",
+                                label: "Drink Alcohol?",
+                                options: [ {
+                                    name: "no",
+                                    label: "No",
+                                    selected: true
+                                }, {
+                                    name: "yes",
+                                    label: "Yes"
+                                } ]
+                            },
+                            occupation: {
+                                name: "occupation",
+                                label: "Occupation",
+                                pattern: "",
+                                error: "Please enter your occupation",
+                                classes: "mdl-textfield-med"
+                            },
+                            hoursOfWorkPerWeek: {
+                                name: "HoursOfWorkPerWeek",
+                                label: "Hours of work per week",
+                                pattern: "",
+                                error: "Please enter how many hours you work per week",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatPromptedYouToContactMe: {
+                                name: "whatPromptedYouToContactMe",
+                                label: "What prompted you to contact me?",
+                                pattern: "",
+                                error: "Please say why you contact me",
+                                classes: "mdl-textfield-long"
+                            },
+                            inGeneralHowWouldYouRateYourOverallHealth: {
+                                name: "inGeneralHowWouldYouRateYourOverallHealth",
+                                label: "In general how would you rate your overall health",
+                                pattern: "",
+                                error: "Please rate your overall health",
+                                classes: "mdl-textfield-long"
+                            },
+                            mainHealthConcerns: {
+                                name: "mainHealthConcerns",
+                                label: "Main Health Concerns",
+                                pattern: "",
+                                error: "Please enter your main health concerns",
+                                classes: "mdl-textfield-long"
+                            },
+                            anyOtherConcerns: {
+                                name: "anyOtherConcerns",
+                                label: "Any other concerns",
+                                pattern: "",
+                                error: "Please enter all your concerns",
+                                classes: "mdl-textfield-long"
+                            },
+                            atWhatPointInYourLifeHaveYouFeltYourBest: {
+                                name: "atWhatPointInYourLifeHaveYouFeltYourBest",
+                                label: "At What point in your life have you felt your best",
+                                pattern: "",
+                                error: "Please enter the time that you have felt your best",
+                                classes: "mdl-textfield-long"
+                            },
+                            wellnessGoals: {
+                                name: "wellnessGoals",
+                                label: "Wellness Goals",
+                                pattern: "",
+                                error: "Please enter your wellness goals",
+                                classes: "mdl-textfield-long"
+                            },
+                            howIsYourSleep: {
+                                name: "howIsYourSleep",
+                                label: "How is your sleep Goals",
+                                pattern: "",
+                                error: "Please enter if you sleep good or not",
+                                classes: "mdl-textfield-long"
+                            },
+                            howManyHoursDoYouSleep: {
+                                name: "howManyHoursDoYouSleep",
+                                label: "How many hours do you sleep?",
+                                pattern: "",
+                                error: "Please enter how many hours you sleep",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouWakeUpAtNight: {
+                                name: "doYouWakeUpAtNight",
+                                label: "Do you wake up at night?",
+                                pattern: "",
+                                error: "Please enter if you wake up at night?",
+                                classes: "mdl-textfield-long"
+                            },
+                            timeToBed: {
+                                name: "timeToBed",
+                                label: "Time to Bed",
+                                pattern: "",
+                                error: "Please enter the time you usually go to bed",
+                                classes: "mdl-textfield-long"
+                            },
+                            timeWakeUp: {
+                                name: "timeWakeUp",
+                                label: "Time wake up",
+                                pattern: "",
+                                error: "Please enter the time you usually wake up",
+                                classes: "mdl-textfield-long"
+                            },
+                            howDoYouFeelWhenYouWakeUp: {
+                                name: "howDoYouFeelWhenYouWakeUp",
+                                label: "How do you feel when you wake up?",
+                                pattern: "",
+                                error: "Please enter how you feel after you wake up",
+                                classes: "mdl-textfield-long"
+                            },
+                            anyPainStiffnessOrSwelling: {
+                                name: "anyPainStiffnessOrSwelling",
+                                label: "Any Pain,Stiffness,or swelling?",
+                                pattern: "",
+                                error: "Please enter if you have any pain stiffness or swelling",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatDoYouDoForIt: {
+                                name: "whatDoYouDoForIt",
+                                label: "What do you do for it?",
+                                pattern: "",
+                                error: "Please enter what you do for it",
+                                classes: "mdl-textfield-long"
+                            },
+                            howIsYourDigestion: {
+                                name: "howIsYourDigestion",
+                                label: "How is your digestion?",
+                                pattern: "",
+                                error: "Please enter how is your digestion",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouExperienceConstipationBloatingDiarrhea: {
+                                name: "doYouExperienceConstipationBloatingDiarrhea",
+                                label: "Do you experience Constipation,Bloating,Diarrhea?",
+                                pattern: "",
+                                error: "Please enter if you have any of the listed above",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouHaveAllergiesOrSensitivities: {
+                                name: "doYouHaveAllergiesOrSensitivities",
+                                label: "Do you have Allergies or Sensitivities?",
+                                pattern: "",
+                                error: "Please enter what allergies or sensitivities that you have",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouTakeAnyMedicationSupplementsOrVitamins: {
+                                name: "doYouTakeAnyMedicationSupplementsOrVitamins",
+                                label: "Do you take any medication, supplements, or Vitamins?",
+                                pattern: "",
+                                error: "Please enter if you take any medication listed above",
+                                classes: "mdl-textfield-long"
+                            },
+                            howMuchStressDoYouHaveInYourLifeRightNow: {
+                                name: "howMuchStressDoYouHaveInYourLifeRightNow",
+                                label: "How much stress do you have in your life right now?(On a scale of 1-10)",
+                                pattern: "",
+                                error: "Please enter the stress you have in your life now",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatIsYOurPrimaryStressInYourLifeAtThisTime: {
+                                name: "whatIsYOurPrimaryStressInYourLifeAtThisTime",
+                                label: "What is your primary stress in your life at this time?",
+                                pattern: "",
+                                error: "Please enter what is the primary stress in your life now",
+                                classes: "mdl-textfield-long"
+                            },
+                            howOftenDoYouFeelRelaxedOrAtPeace: {
+                                name: "howOftenDoYouFeelRelaxedOrAtPeace",
+                                label: "How Often do you feel relaxed or at peace?",
+                                pattern: "",
+                                error: "Please enter how often you feel relaxed or at peace",
+                                classes: "mdl-textfield-long"
+                            },
+                            mostOfTheTimeSometimesRarelyOrNever: {
+                                name: "mostOfTheTimeSometimesRarelyOrNever",
+                                label: "Most of the time, Sometimes, Rarely, or Never",
+                                pattern: "",
+                                error: "Please enter if you feel stressed sometimes, rareley, or never",
+                                classes: "mdl-textfield-long"
+                            },
+                            areYouBeingTreatedForAnyEmotionalOrPhysicalConditionAtThisTime: {
+                                name: "areYouBeingTreatedForAnyEmotionalOrPhysicalConditionAtThisTime",
+                                label: "Are you being treated for any emotional or physical condition at this time?",
+                                pattern: "",
+                                error: "Please enter if you are being treated for any emotional or physical condition now",
+                                classes: "mdl-textfield-long"
+                            },
+                            howIsYOurEnergyLevelThroughoutTheDay: {
+                                name: "howIsYOurEnergyLevelThroughoutTheDay",
+                                label: "How is your energy level throughout the day?",
+                                pattern: "",
+                                error: "Please enter how your energy is during the day",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatGivesYouEnergy: {
+                                name: "whatGivesYouEnergy",
+                                label: "What gives you energy?",
+                                pattern: "",
+                                error: "Please enter what gives you energy",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatZapsYouOfYourEnergy: {
+                                name: "whatZapsYouOfYourEnergy",
+                                label: "What zaps you of your energy?",
+                                pattern: "",
+                                error: "Please enter what zaps you of your energy",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouHaveAMorningRoutineThatYouPractice: {
+                                name: "doYouHaveAMorningRoutineThatYouPractice",
+                                label: "Do you have a morning routine that you practice?",
+                                pattern: "",
+                                error: "Please enter what your morning routine is",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouExercise: {
+                                name: "doYouExercise",
+                                label: "Do you exercise?",
+                                pattern: "",
+                                error: "Please enter if you exercise or not",
+                                classes: "mdl-textfield-long"
+                            },
+                            howSatisfiedAreYouWithYourExerciseLevel: {
+                                name: "howSatisfiedAreYouWithYourExerciseLevel",
+                                label: "How satisfied are you with your exercise level?",
+                                pattern: "",
+                                error: "Please enter how satisfied you are with your exercise level",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatDoYouLikeToDoForPhysicalActivity: {
+                                name: "whatDoYouLikeToDoForPhysicalActivity",
+                                label: "How satisfied are you with your physical activity?",
+                                pattern: "",
+                                error: "Please enter how satisfied you are with your physical activity",
+                                classes: "mdl-textfield-long"
+                            },
+                            howSatisfiedAreYouWithYourCurrentEatingAndNutrition: {
+                                name: "howSatisfiedAreYouWithYourCurrentEatingAndNutrition",
+                                label: "How Satisfied are you with your current eating and nutrition?",
+                                pattern: "",
+                                error: "Please enter how your are with your eating and nutrition now",
+                                classes: "mdl-textfield-long"
+                            },
+                            howSatisfiedAreYouWithYourWeight: {
+                                name: "howSatisfiedAreYouWithYourWeight",
+                                label: "How Satisfied are you with your with your weight ",
+                                pattern: "",
+                                error: "Please enter how your weight or with is satisfied",
+                                classes: "mdl-textfield-long"
+                            },
+                            howSatisfiedAreYouWithYourLifeInGeneral: {
+                                name: "HowSatisfiedAreYouWithYourLifeInGeneral",
+                                label: "How Satisfied are your life in general ",
+                                pattern: "",
+                                error: "Please enter how your life is in general",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatWouldYouLikeToDoToChangeForTheBetter: {
+                                name: "whatWouldYouLikeToDoToChangeForTheBetter",
+                                label: "What would you like to do to change for the better? ",
+                                pattern: "",
+                                error: "Please enter what you would like to do to change for the better.",
+                                classes: "mdl-textfield-long"
+                            },
+                            howWouldYouRateYourOverallSelfEsteem: {
+                                name: "howWouldYouRateYourOverallSelfEsteem",
+                                label: "How would you rate your overall Self-Esteem ",
+                                pattern: "",
+                                error: "Please enter what you would rate your Self-Esteem?",
+                                classes: "mdl-textfield-long"
+                            },
+                            ExcellentVeryGoodGoodFairOrPoor: {
+                                name: "ExcellentVeryGoodGoodFairOrPoor",
+                                label: "Excellent, Very Good, Good, Fair, or Poor?",
+                                pattern: "",
+                                error: "Please enter one of these on how your are doing",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatPositiveQualitiesDoYouHaveThatWillHelpYouReachYourGoals: {
+                                name: "whatPositiveQualitiesDoYouHaveThatWillHelpYouReachYourGoals",
+                                label: "What positive qualities do you have that will help you reach your goals?",
+                                pattern: "",
+                                error: "Please enter the qualities that will help you reach your goals",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatPositiveQualitiesWouldYouLikeToDevelop: {
+                                name: "whatPositiveQualitiesWouldYouLikeToDevelop",
+                                label: "What positive qualities would you like to develop?",
+                                pattern: "",
+                                error: "Please enter the qualities that that you want to develop",
+                                classes: "mdl-textfield-long"
+                            },
+                            ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime: {
+                                name: "ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime",
+                                label: "If money or time wer not relative, how would you like to spend your time?",
+                                pattern: "",
+                                error: "Please enter what you would do to this question",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatIsTheHardestThingInLifeSoFarHaveYouHadToOvercome: {
+                                name: "whatIsTheHardestThingInLifeSoFarHaveYouHadToOvercome",
+                                label: "What is the hardest thing in life so far have you had to overcome?",
+                                pattern: "",
+                                error: "Please enter what has been the hardest thing you have overcome",
+                                classes: "mdl-textfield-long"
+                            },
+                            inSixMonthsFromNowWhatWouldYouLikeYourLifeToLookLite: {
+                                name: "inSixMonthsFromNowWhatWouldYouLikeYourLifeToLookLite",
+                                label: "In 6 months from now, what would you like your life to look like?",
+                                pattern: "",
+                                error: "Please enter what you would like your life too look like from now on",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatAreYourHobbiesOrSpecialInterests: {
+                                name: "whatAreYourHobbiesOrSpecialInterests",
+                                label: "What are your hobbies or special interests",
+                                pattern: "",
+                                error: "Please enter what your hobbies or special interests are",
+                                classes: "mdl-textfield-long"
+                            },
+                            doYouHaveAnyConcernsOrReservationsAboutWorkingWithACoach: {
+                                name: "doYouHaveAnyConcernsOrReservationsAboutWorkingWithACoach",
+                                label: "Do you have any concerns or reservations about working with a coach?",
+                                pattern: "",
+                                error: "Please enter if you have reservations about working with a coach",
+                                classes: "mdl-textfield-long"
+                            },
+                            howWouldYouLikeToBeCoached: {
+                                name: "howWouldYouLikeToBeCoached",
+                                label: "How would you like to be coached?",
+                                pattern: "",
+                                error: "Please enter how you would like to be coached",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatAreYourExpectationsForMeAsACoach: {
+                                name: "whatAreYourExpectationsForMeAsACoach",
+                                label: "What are your expectations for me as a coach?",
+                                pattern: "",
+                                error: "Please enter what your expectations are for me as a coach",
+                                classes: "mdl-textfield-long"
+                            },
+                            whatWouldYouLikeMeToWorkOn: {
+                                name: "whatWouldYouLikeMeToWorkOn",
+                                label: "What would you like me to work on?",
+                                pattern: "",
+                                error: "Please enter what you want me to work on",
+                                classes: "mdl-textfield-long"
+                            },
+                            goalSetting: {
+                                name: "goalSetting",
+                                label: "Goal setting",
+                                pattern: "",
+                                error: "Please enter your goal setting is",
+                                classes: "mdl-textfield-long"
+                            },
+                            recipes: {
+                                name: "recipes",
+                                label: "Recipes",
+                                pattern: "",
+                                error: "Please enter your recipes",
+                                classes: "mdl-textfield-long"
+                            },
+                            exerciseIdeasAndRoutines: {
+                                name: "exerciseIdeasAndRoutines",
+                                label: "Exercise ideas and routines",
+                                pattern: "",
+                                error: "Please enter your exercise ideas and routines",
+                                classes: "mdl-textfield-long"
+                            },
+                            distressingTechniques: {
+                                name: "distressingTechniques",
+                                label: "Distressing techniques",
+                                pattern: "",
+                                error: "Please enter your distressing techniques",
+                                classes: "mdl-textfield-long"
+                            },
+                            spiritualHelp: {
+                                name: "spiritualHelp",
+                                label: "Spiritual Help",
+                                pattern: "",
+                                error: "Please enter your spiritual help",
+                                classes: "mdl-textfield-long"
+                            },
+                            emotionalSupport: {
+                                name: "emotionalSupport",
+                                label: "Emotional support",
+                                pattern: "",
+                                error: "Please enter your emotional support",
+                                classes: "mdl-textfield-long"
+                            },
+                            wouldYouLikeToCommunicateThroughEmails: {
+                                name: "wouldYouLikeToCommunicateThroughEmails",
+                                label: "Would you prefer to communicate through?",
+                                options: [ {
+                                    name: "email",
+                                    label: "Email",
+                                    selected: true
+                                }, {
+                                    name: "text",
+                                    label: "text"
+                                }, {
+                                    name: "phone",
+                                    label: "phone"
+                                } ]
+                            },
+                            wouldYouFeelComfortableUsingSkype: {
+                                name: "wouldYouFeelComfortableUsingSkype",
+                                label: "Would you feel comfortable using Skype",
+                                options: [ {
+                                    name: "no",
+                                    label: "No",
+                                    selected: true
+                                }, {
+                                    name: "yes",
+                                    label: "Yes"
+                                } ]
+                            },
+                            isThereAnythingElseYouWouldLikeMeToKnowAboutYouThatWouldHelpOurCoachingSessionTogether: {
+                                name: "isThereAnythingElseYouWouldLikeMeToKnowAboutYouThatWouldHelpOurCoachingSessionTogether",
+                                label: "Is there anything else you would like me to know about you that would help our coaching session together?",
+                                pattern: "",
+                                error: "Please enter if there is anything else you would like me to know about you that would help our coaching session together",
+                                classes: "mdl-textfield-full"
+                            },
+                            doYouHaveAnyQuestionsForMeAsYourCoach: {
+                                name: "doYouHaveAnyQuestionsForMeAsYourCoach",
+                                label: "Do you have any questions for me as your coach?",
+                                pattern: "",
+                                error: "Please enter if there is anything else you would like me to know about you that would help our coaching session together",
+                                classes: "mdl-textfield-full"
+                            }
+                        }
+                    };
+                    scope.submit = function() {
+                        var form = el.querySelector("form");
+                        form.action = "php/form.php";
+                        form.method = "POST";
+                        form.enctype = "multipart/form-data";
+                        form.submit();
+                    };
+                } ]
+            };
+        });
+    });
+    //! node_modules/hbjs/src/hb/debug/debugDev.js
+    //! pattern /hb\-errors-debug\b/
+    define("hb.debug.dev", [ "hb.debug", "hb.debug.logs", "hb.debug.stats", "apply" ], function(debug, debugLogs, debugStats, apply) {
+        var errors = debug.errors;
+        errors.E1 = "Trying to assign multiple scopes to the same dom element is not permitted.", 
+        errors.E2 = "Unable to find element", errors.E3 = "Exceeded max digests of ", errors.E4 = "parent element not found in %o", 
+        errors.E5 = "property is not of type object", errors.E6a = 'Error evaluating: "', 
+        errors.E6b = '" against %o', errors.E7 = "$digest already in progress.", errors.E8 = "Name required to instantiate module", 
+        errors.E9 = "Injection not found for ", errors.E10 = "This element has already been compiled", 
+        errors.E11 = "Watch cannot have a function of null or undefined", errors.E12 = "parent element not found in %o";
+        function createLog(name) {
+            return function() {
+                if (window.console && console[name]) {
+                    apply(console[name], console, arguments);
+                }
+            };
+        }
+        debugLogs(debug);
+        debugStats(debug);
+        debug.ignoreErrors = false;
+        debug.log = createLog("log");
+        debug.info = createLog("info");
+        debug.warn = createLog("warn");
+        return debug;
+    });
+    //! node_modules/hbjs/src/hb/debug/log.js
+    define("hb.debug.logs", [ "hb.debug.item", "hb.debug.colors", "apply" ], function(debugItem, colors, apply) {
+        function logger(model) {
+            var logs = {};
+            function register(name, color) {
+                logs[name] = logs[name] || new debugItem(name, color);
+                return logs[name];
+            }
+            function enable(name) {
+                var success = false, a;
+                for (var i = 0, len = arguments.length; i < len; i += 1) {
+                    a = arguments[i];
+                    if (logs[a]) {
+                        logs[a].enabled = success = true;
+                    }
+                }
+                return success;
+            }
+            function log() {
+                if (model.enabled && this.enabled) {
+                    var args = Array.prototype.slice.call(arguments);
+                    var n = this.name;
+                    args = [ "%c" + n + "::", "color:" + this.color ].concat(args);
+                    if (window.console && console[this.mode]) {
+                        apply(console[this.mode], console, args);
+                    }
+                }
+            }
+            function logMethodFactory(mode) {
+                return function() {
+                    this.mode = mode;
+                    apply(log, this, arguments);
+                };
+            }
+            debugItem.prototype.log = logMethodFactory("log");
+            debugItem.prototype.info = logMethodFactory("info");
+            debugItem.prototype.warn = logMethodFactory("warn");
+            debugItem.prototype.error = logMethodFactory("error");
+            model.log = enable;
+            model.enabled = true;
+            model.register = register;
+            return model;
+        }
+        return logger;
+    });
+    //! node_modules/hbjs/src/hb/debug/debugItem.js
+    define("hb.debug.item", [ "hb.debug.colors" ], function(colors) {
+        function DebugItem(name, color) {
+            this.name = name;
+            this.mode = "log";
+            this.color = color || colors(name);
+        }
+        return DebugItem;
+    });
+    //! node_modules/hbjs/src/hb/debug/colors.js
+    define("hb.debug.colors", function() {
+        var colors = [ "#3F51B5", "#4CAF50", "#FF9800", "#f93b39", "#de9c1b", "#008bf5", "#708bca", "#87a5ae", "#ff6092" ];
+        var cache = {};
+        var index = 0;
+        function nextColor() {
+            var color = colors[index];
+            index += 1;
+            index %= colors.length;
+            return color;
+        }
+        function getColor(name) {
+            return cache[name] = cache[name] || nextColor();
+        }
+        return getColor;
+    });
+    //! node_modules/hbjs/src/hb/debug/stats.js
+    define("hb.debug.stats", [ "hb.debug.item", "hb.debug.stats.item", "consoleGraph", "hb.debug.colors" ], function(debugItem, statsItem, consoleGraph, colors) {
+        function statsBehavior(model) {
+            var statsData = {};
+            var liveStatsList = [];
+            var liveStatsIntv = 0;
+            var imgs = {};
+            var debugEl;
+            function liveStats(name) {
+                for (var i = 0, len = arguments.length; i < len; i += 1) {
+                    name = arguments[i];
+                    if (liveStatsList.indexOf(name) === -1) {
+                        liveStatsList.push(name);
+                        if (!liveStatsIntv) {
+                            debugEl = document.getElementById("hb-debug-stats");
+                            if (!debugEl) {
+                                debugEl = document.createElement("div");
+                                debugEl.id = "debug-stats";
+                                debugEl.style.position = "absolute";
+                                document.body.appendChild(debugEl);
+                            }
+                            liveStatsIntv = setInterval(function() {
+                                for (var i = 0, len = liveStatsList.length; i < len; i += 1) {
+                                    logItemStats(statsData[liveStatsList[i]], true, liveStatsList[i]);
+                                }
+                            }, 1e3);
+                        }
+                    }
+                }
+            }
+            function getStats() {
+                return statsData[this.name] = statsData[this.name] || {};
+            }
+            function stat(name, color) {
+                var stats = this.getStats();
+                return stats[name] = stats[name] || new statsItem(name, color || this.color);
+            }
+            function flushStats(name) {
+                if (name) {
+                    this.getStats()[name].clear();
+                }
+                statsData[this.name] = {};
+            }
+            function logStats() {
+                var i;
+                for (i in statsData) {
+                    if (statsData.hasOwnProperty(i)) {
+                        logItemStats.call(this, statsData[i]);
+                    }
+                }
+                return " ";
+            }
+            function getImg(name) {
+                var img;
+                if (!imgs[name]) {
+                    img = new Image();
+                    img.style.display = "block";
+                    debugEl.appendChild(img);
+                    imgs[name] = img;
+                }
+                return imgs[name];
+            }
+            function logItemStats(stats, live, label) {
+                var i, len, url, img;
+                for (i in stats) {
+                    if (stats.hasOwnProperty(i)) {
+                        len = stats[i].data.length;
+                        if (len) {
+                            if (live) {
+                                if (stats[i].dirty) {
+                                    stats[i].dirty = false;
+                                    url = consoleGraph.graph(stats[i].data, label + ":: " + i, stats[i].color);
+                                    img = getImg.call(this, i);
+                                    img.src = url;
+                                }
+                            } else {
+                                console.graph(stats[i].data, 0, i);
+                            }
+                        }
+                    }
+                }
+            }
+            function clearStats(name, statName) {
+                statsData[name][statName].clear();
+            }
+            debugItem.prototype.stat = stat;
+            debugItem.prototype.getStats = getStats;
+            debugItem.prototype.flushStats = flushStats;
+            model.stats = liveStats;
+            model.getStats = function() {
+                return statsData;
+            };
+            model.logStats = logStats;
+            model.clearStats = clearStats;
+            return model;
+        }
+        return statsBehavior;
+    });
+    //! node_modules/hbjs/src/hb/debug/statsItem.js
+    define("hb.debug.stats.item", [ "hb.debug.colors" ], function(colors) {
+        function Stat(name, color) {
+            this.name = name;
+            this.color = color || colors(name);
+            this.clear();
+        }
+        Stat.prototype.clear = function() {
+            this.index = -1;
+            this.data = this.data || [];
+            this.data.length = 0;
+            this.dirty = true;
+            this.next();
+        };
+        Stat.prototype.next = function() {
+            this.index += 1;
+            this.data[this.index] = 0;
+            this.dirty = true;
+        };
+        Stat.prototype.inc = function(n) {
+            this.data[this.index] += n || 1;
+            this.dirty = true;
+        };
+        Stat.prototype.dec = function(n) {
+            this.data[this.index] -= n || 1;
+            this.dirty = true;
+        };
+        Stat.prototype.set = function(n) {
+            this.data[this.index] = n;
+            this.dirty = true;
+        };
+        return Stat;
+    });
+    //! node_modules/hbjs/src/hb/debug/consoleGraph.js
+    define("consoleGraph", [ "apply" ], function(apply) {
+        if (!window.console || !window.console.log) {
+            return;
+        }
+        var canvas, context, height = 18, padding = 1, fontSize = 10, width = 400, labelWidth = 100, api = {};
+        canvas = document.createElement("canvas");
+        canvas.height = height + "";
+        canvas.width = width + "";
+        context = canvas.getContext("2d");
+        if (document.body) {
+            document.body.appendChild(canvas);
+        }
+        canvas.style.cssText = "position: absolute; left: -" + width + "px; background-color:#FFF;";
+        context.font = fontSize + "px Arial";
+        var _graph = function(imageURL, height, width, label) {
+            console.log("%c ", "" + "font-size: 0px;" + "border-left:100px solid #FFF; " + "padding-left: " + width + "px;" + "padding-bottom: " + height + "px;" + 'background: url("' + imageURL + '"), ' + "-webkit-linear-gradient(#CCC, #CCC);" + "");
+            console.log(label || "\t");
+        };
+        function graph(data, label, color) {
+            var len = data.length;
+            var graphWidth = width - labelWidth;
+            var units = graphWidth / len;
+            var offset = 0;
+            var offsetLen = len - offset;
+            while (units < 2) {
+                offset += 1;
+                offsetLen = len - offset;
+                units = graphWidth / offsetLen;
+            }
+            var max = Math.max.apply(Math, data);
+            var barWidth = Math.min(units, 4);
+            barWidth = barWidth < 1 ? 1 : barWidth;
+            var h;
+            var hp = height - padding * 2;
+            var last = 0;
+            context.clearRect(0, 0, width, height);
+            context.fillStyle = color || "#999";
+            if (len > 1) {
+                for (var i = 0; i < offsetLen; i++) {
+                    last = data[offset + i];
+                    h = hp * (last / max);
+                    context.fillRect(labelWidth + i * barWidth, hp - h + padding, barWidth, h);
+                }
+            }
+            context.textBaseline = "middle";
+            context.fillStyle = color || "#333";
+            context.fillText(label, 2, height * .25);
+            context.fillText("  " + (len > 1 ? len + " / " + max + " / " + last : data[0]), 2, height * .75);
+            context.fillStyle = "#EFEFEF";
+            context.fillRect(0, height - 1, width, 1);
+            return canvas.toDataURL();
+        }
+        window.console.graph = function(data, max, label) {
+            var imgURL = graph(data, max, label);
+            _graph(imgURL, height, width, label);
+        };
+        api.graph = graph;
+        return api;
+    });
+    //! src/application/form-fields/input/bh-input.js
+    define("bhInput", [ "hb.directive" ], function(directive) {
+        directive("bhInput", function() {
+            return {
+                scope: true,
+                replace: true,
+                tpl: "<div class=\"mdl-textfield {{::field.classes}} mdl-js-textfield mdl-textfield--floating-label\" hb-alt=\"field.label\"> <input class=\"mdl-textfield__input\" hb-id=\"field.name\" hb-name=\"field.name\" type=\"text\" hb-pattern=\"field.pattern\"> <label class=\"mdl-textfield__label\" hb-for=\"field.name\">{{::field.label}} <span class=\"subtext\">{{::field.subtext}}</span></label> <span class=\"mdl-textfield__error\">{{::field.error}}</span></div>",
+                link: [ "scope", "el", "alias", function(scope, el, alias) {
+                    scope.field = scope.$eval(alias.value);
+                } ]
+            };
+        });
+    });
+    //! src/application/form-fields/radio/bh-radio.js
+    define("bhRadio", [ "hb.directive" ], function(directive) {
+        directive("bhRadio", function() {
+            return {
+                scope: true,
+                replace: true,
+                tpl: "<div class=\"mdl-textfield {{::field.classes}} mdl-js-textfield mdl-textfield--floating-label is-focused\" hb-alt=\"field.label\"> <label class=\"mdl-textfield__label\" hb-for=\"field.name\">{{::field.label}} <span class=\"subtext\">{{::field.subtext}}</span></label> <div hb-id=\"field.name\" hb-repeat=\"option in field.options\"> <label class=\"mdl-radio mdl-js-radio mdl-js-ripple-effect\" hb-for=\"option.name\"> <input type=\"radio\" hb-id=\"option.name\" class=\"mdl-radio__button\" hb-name=\"field.name\" hb-value=\"option.name\" hb-checked=\"option.selected\"> <span class=\"mdl-radio__label\">{{option.label}}</span> </label> </div></div>",
+                link: [ "scope", "el", "alias", function(scope, el, alias) {
+                    scope.field = scope.$eval(alias.value);
+                } ]
+            };
+        });
+    });
+    //! src/widgets/bh-home.js
+    define("bhHome", [ "hb.directive" ], function(directive) {
+        directive("bhHome", function() {
+            return {
+                scope: true,
+                link: [ "scope", "el", "alias", function(scope, el, alias) {
+                    scope.goToForm = function() {
+                        document.location.href = "./questionaire.html";
+                    };
+                } ]
+            };
+        });
     });
     //! #################  YOUR CODE ENDS HERE  #################### //
     finalize();

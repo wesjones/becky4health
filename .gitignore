@@ -3,4 +3,6 @@
 *.iml
 out
 gen
+node_modules
+logs
 # Created by .ignore support plugin (hsz.mobi)

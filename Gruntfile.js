@@ -11,24 +11,13 @@ module.exports = function (grunt) {
             filename: 'widgets',
             build: 'dist',
             scripts: {
+                ignorePatterns: false,
                 inspect: ['sandbox/index.html', 'src/**/**.html', 'src/**/**.js'],
                 src: ['src/bootstrap.js', 'src/application/**/*.js', 'src/widgets/**/*.js', '!src/widgets/*/bootstrap.js'], // search through all JS file in src src directory
-                import: ['application.*', 'hbd.cloak', 'hbd.html', 'hbd.href'], // what files should we import and compile
+                import: ['app', 'hbd.cloak', 'hbd.html', 'hbd.href'], // what files should we import and compile
                 //includes: ['src/widgets/b4h-video/vendor/media.vimeo.js'],
                 export: [''], // hide all from view
                 report: 'verbose'
-            },
-            styles: {
-                options: {
-                    paths: ["**/*.less"],
-                    strictImports: true,
-                    syncImport: true
-                },
-                files: {
-                    'dist/widgets.css': [
-                        "src/**/*.less"
-                    ]
-                }
             },
             templates: {
                 options: {
@@ -82,6 +71,16 @@ module.exports = function (grunt) {
             regExp: false
         }
     };
+    config.less = {
+        "src": {
+            options: {
+                strictImports: true
+            },
+            files: {
+                'dist/main.css': 'src/main.less'
+            }
+        }
+    };
 
     // To watch for changes
     // $ grunt watch
@@ -109,6 +108,6 @@ module.exports = function (grunt) {
     grunt.initConfig(config);
 
     // register tasks
-    grunt.registerTask('default', ['clean:dist', 'compile']); // , 'copy'
+    grunt.registerTask('default', ['clean:dist', 'compile', 'less']); // , 'copy'
     grunt.registerTask('test', 'jasmine');
 };
