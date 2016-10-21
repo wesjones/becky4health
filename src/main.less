@@ -35,11 +35,28 @@ html, body {
     margin-bottom: 20px;
   }
 
+  .mdl-textfield__label {
+    white-space: pre-wrap;
+    overflow: visible;
+  }
+
+  .mdl-textfield__input {
+    border-bottom-width: 0;
+    &:focus {
+      border-bottom-width: 1px;
+    }
+  }
+
+  .mdl-textfield--floating-label .mdl-textfield__label {
+    top: -2px;
+  }
+
   .mdl-textfield {
     min-width: 150px;
     width: ~"calc(50% - 40px)";
     max-width: 250px;
     margin-left: 20px;
+    vertical-align: top;
   }
 
   .mdl-textfield.mdl-textfield-mini {
@@ -98,7 +115,7 @@ html, body {
   @media only screen and (max-width: 500px) {
     margin: 10px;
     .mdl-textfield {
-      width: ~"calc(48% - 20px)";
+      width: ~"calc(100% - 20px)";
       min-width: 100px;
     }
   }

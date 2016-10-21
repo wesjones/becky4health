@@ -64,13 +64,13 @@
         return define;
     })();
     //! ################# YOUR CODE STARTS HERE #################### //
-    //! node_modules/hbjs/src/utils/formatters/removeExtraSpaces.js
-    define("removeExtraSpaces", function() {
-        var removeExtraSpaces = function(str) {
-            str = str + "";
-            return str.replace(/\s+/g, " ");
+    //! node_modules/hbjs/src/utils/formatters/removeHTMLComments.js
+    define("removeHTMLComments", function() {
+        var removeHTMLComments = function(htmlStr) {
+            htmlStr = htmlStr + "";
+            return htmlStr.replace(/<!--[\s\S]*?-->/g, "");
         };
-        return removeExtraSpaces;
+        return removeHTMLComments;
     });
     //! src/widgets/bootstrap.js
     internal("app", [ "module", "dispatcher", "ready", "loader", "findScriptUrls" ], function(module, dispatcher, ready, loader, findScriptUrls) {
@@ -1936,6 +1936,14 @@
         };
         return removeLineBreaks;
     });
+    //! node_modules/hbjs/src/utils/formatters/removeExtraSpaces.js
+    define("removeExtraSpaces", function() {
+        var removeExtraSpaces = function(str) {
+            str = str + "";
+            return str.replace(/\s+/g, " ");
+        };
+        return removeExtraSpaces;
+    });
     //! node_modules/hbjs/src/hb/module.js
     /*!
  import hbd.app
@@ -2102,14 +2110,6 @@
             }
             return app;
         };
-    });
-    //! node_modules/hbjs/src/utils/formatters/removeHTMLComments.js
-    define("removeHTMLComments", function() {
-        var removeHTMLComments = function(htmlStr) {
-            htmlStr = htmlStr + "";
-            return htmlStr.replace(/<!--[\s\S]*?-->/g, "");
-        };
-        return removeHTMLComments;
     });
     //! node_modules/hbjs/src/utils/browser/ready.js
     define("ready", function() {
@@ -2534,6 +2534,338 @@
             return matches;
         };
     });
+    //! node_modules/hbjs/src/hb/directives/repeat.js
+    //! pattern /hb\-repeat\=/
+    define("hbRepeat", [ "hb.directive", "each", "asyncRender", "hb.debug", "hb.eventStash", "filter", "apply", "debounce" ], function(directive, each, asyncRender, debug, events, filter, apply, debounce) {
+        events.REPEAT_RENDER_CHUNK_COMPLETE = "repeat::render_chunk_complete";
+        events.REPEAT_RENDER_COMPLETE = "repeat::render_complete";
+        directive("hbRepeat", function() {
+            var DOWN = "down";
+            var UP = "up";
+            function trimStrings(str, index, list) {
+                list[index] = str && str.trim();
+            }
+            var db = debug.register("hb-repeat");
+            var asyncEvents = db.stat("async events");
+            var pattern = /(\w+)\s+in\s+([\w\.]+)(\|(.*?)$)?$/;
+            return {
+                link: [ "scope", "el", "alias", "attr", "$app", function(scope, el, alias, attr, $app) {
+                    var template = el.children[0].outerHTML;
+                    var postDigest;
+                    el.removeChild(el.children[0]);
+                    var statement = alias.value;
+                    var match = statement.match(pattern);
+                    statement = [];
+                    if (match && match.length) {
+                        for (var i = 1; i < match.length; i += 1) {
+                            statement.push(match[i]);
+                        }
+                    }
+                    each(statement, trimStrings);
+                    var itemName = statement[0], watch = statement[1], filterFn = statement[3] && statement[3].split(":");
+                    var intv;
+                    var intvAfter;
+                    var currentList;
+                    var async = false;
+                    var topDown = attr.topDown && scope.$eval(attr.topDown) || 0;
+                    var bottomUp = attr.bottomUp && scope.$eval(attr.bottomUp) || 0;
+                    var asyncEnabled = topDown || bottomUp || false;
+                    var ar = asyncRender.create();
+                    var firstPass = true;
+                    var pending = false;
+                    ar.on(events.ASYNC_RENDER_CHUNK_END, asyncRenderNext);
+                    ar.on(events.ASYNC_RENDER_COMPLETE, renderComplete);
+                    function removeUntil(len) {
+                        var child;
+                        while (el.children.length > len) {
+                            child = el.children[el.children.length - 1];
+                            if (child.scope && child.scope !== scope) {
+                                child.scope.$destroy();
+                            }
+                            el.removeChild(child);
+                        }
+                    }
+                    function preRender(list, oldList) {
+                        var len = list && list.length || 0;
+                        clearTimeout(intvAfter);
+                        intvAfter = 0;
+                        if (!pending) {
+                            asyncEvents.next();
+                            currentList = list;
+                            ar.setup(bottomUp && firstPass ? UP : DOWN, topDown || bottomUp || len, len);
+                            render(list, oldList);
+                        } else if (async) {
+                            pending = true;
+                            currentList = list;
+                        }
+                    }
+                    function asyncRenderNext() {
+                        if (asyncEnabled && async) {
+                            clearTimeout(intv);
+                            intv = setTimeout(next);
+                        } else {
+                            next();
+                        }
+                    }
+                    function next() {
+                        clearTimeout(intv);
+                        if (ar.next()) {
+                            render(currentList);
+                            if (asyncEnabled && async) {
+                                asyncEvents.inc();
+                                scope.$emit(events.REPEAT_RENDER_CHUNK_COMPLETE, currentList, ar.index, ar.maxLen);
+                            }
+                        }
+                    }
+                    function renderComplete() {
+                        clearInterval(intv);
+                        clearInterval(intvAfter);
+                        intv = null;
+                        intvAfter = null;
+                        if (asyncEnabled && async) {
+                            asyncEvents.inc();
+                            scope.$emit(events.REPEAT_RENDER_COMPLETE, currentList);
+                        }
+                        firstPass = !(currentList && currentList.length);
+                        if (pending) {
+                            async = false;
+                            pending = false;
+                            intv = setTimeout(function() {
+                                clearTimeout(intv);
+                                preRender(currentList);
+                                scope.$digest();
+                            });
+                        }
+                    }
+                    function createRow(list, el, index) {
+                        var data = {};
+                        data[itemName] = list[index];
+                        data.$index = index;
+                        var s = scope.$new();
+                        var child = $app.addChild(el, template, s, data, ar.direction === ar.up);
+                        if (ar.size) {
+                            s.$digest();
+                        }
+                        return child;
+                    }
+                    function updateRow(list, child, index) {
+                        var s = child.scope;
+                        s[itemName] = list[index];
+                        s.$index = index;
+                    }
+                    function destroy() {
+                        clearInterval(intv);
+                    }
+                    function findChildIndex(index) {
+                        var s, e;
+                        for (var i = 0, len = el.children.length; i < len; i += 1) {
+                            e = el.children[i];
+                            s = el.children[i].scope;
+                            if (s && s.$index === index) {
+                                return e;
+                            }
+                        }
+                    }
+                    function render(list, oldList) {
+                        var len, child;
+                        if (list && (len = list.length)) {
+                            removeUntil(len);
+                            while (!ar.complete && !ar.atChunkEnd && list[ar.index]) {
+                                child = findChildIndex(ar.index);
+                                if (child && (!child.scope || child.scope.$index !== ar.index)) {
+                                    child = null;
+                                }
+                                if (!child) {
+                                    async = true;
+                                    child = createRow(list, el, ar.index);
+                                } else if (list[ar.index]) {
+                                    updateRow(list, child, ar.index);
+                                    async = false;
+                                }
+                                ar.inc();
+                            }
+                        } else {
+                            removeUntil(0);
+                        }
+                    }
+                    function setHideShowClasses(index, active, inactive) {
+                        if (!el.children[index].classList.contains(active)) {
+                            el.children[index].classList.add(active);
+                            if (el.children[index].classList.contains(inactive)) {
+                                el.children[index].classList.remove(inactive);
+                            }
+                        }
+                    }
+                    function releasePost() {
+                        postDigest = null;
+                    }
+                    function onPostDigestFor$filter() {
+                        var fn = filterFn[0];
+                        var show = scope.$eval(filterFn[1]);
+                        var hide = scope.$eval(filterFn[2]);
+                        for (var i = 0; i < scope.$c.length; i += 1) {
+                            var val = scope.$c[i].$eval(fn);
+                            if (val) {
+                                setHideShowClasses(i, show, hide);
+                            } else if (!val) {
+                                setHideShowClasses(i, hide, show);
+                            }
+                        }
+                        releasePost();
+                    }
+                    function checkFoPost() {
+                        if (!postDigest) {
+                            postDigest = onPostDigestFor$filter;
+                            scope.$$postDigest(postDigest);
+                        }
+                    }
+                    scope.$watch(watch, preRender, true);
+                    if (filterFn) {
+                        scope.$watch(checkFoPost);
+                    }
+                    scope.$on("$destroy", destroy);
+                } ]
+            };
+        });
+    });
+    //! node_modules/hbjs/src/hb/utils/asyncRender.js
+    define("asyncRender", [ "dispatcher", "hb.eventStash" ], function(dispatcher, events) {
+        var UP = "up";
+        var DOWN = "down";
+        events.ASYNC_RENDER_CHUNK_END = "async::chunk_end";
+        events.ASYNC_RENDER_COMPLETE = "async::complete";
+        function AsyncRender() {
+            this.down = DOWN;
+            this.up = UP;
+            this.direction = DOWN;
+            this.index = 0;
+            this.len = 0;
+            this.maxLen = 0;
+            this.size = 0;
+            this.complete = false;
+            this.atChunkEnd = false;
+            dispatcher(this);
+        }
+        var p = AsyncRender.prototype;
+        p.setup = function(direction, size, maxLen) {
+            this.direction = direction;
+            this.size = size;
+            this.len = 0;
+            this.maxLen = maxLen;
+            this.atChunkEnd = false;
+            this.complete = false;
+            this.index = direction === DOWN ? 0 : maxLen - 1;
+        };
+        p.inc = function() {
+            if (this.complete || this.atChunkEnd) {
+                return;
+            }
+            if (this.direction === DOWN) {
+                if (this.index < this.len) {
+                    this.index += 1;
+                    if (this.index === this.len) {
+                        this.finishChunk();
+                    }
+                } else {
+                    this.finishChunk();
+                }
+            } else {
+                if (this.index > this.maxLen - this.len - 1) {
+                    this.index -= 1;
+                }
+                if (this.index <= this.maxLen - this.len - 1) {
+                    this.finishChunk();
+                }
+            }
+        };
+        p.finishChunk = function() {
+            if (!this.complete && !this.atChunkEnd) {
+                this.atChunkEnd = true;
+                if ((this.index === -1 || this.index === this.maxLen) && this.len === this.maxLen) {
+                    this.finish();
+                }
+                this.dispatch(events.ASYNC_RENDER_CHUNK_END);
+            }
+        };
+        p.next = function() {
+            if (this.complete) {
+                this.dispatch(events.ASYNC_RENDER_COMPLETE);
+                this.direction = DOWN;
+                return false;
+            }
+            var increase = Math.min(this.size, this.maxLen);
+            if (!increase) {
+                return false;
+            }
+            if (this.len + increase > this.maxLen) {
+                increase = this.maxLen - this.len;
+            }
+            if (this.direction === UP) {
+                this.index = this.maxLen - this.len - 1;
+            }
+            this.len += increase;
+            this.atChunkEnd = false;
+            return true;
+        };
+        p.finish = function() {
+            this.complete = true;
+        };
+        return {
+            create: function() {
+                return new AsyncRender();
+            }
+        };
+    });
+    //! node_modules/hbjs/src/utils/data/filter.js
+    define("filter", function() {
+        var filter = function(list, method) {
+            var i = 0, len, result = [], extraArgs, response;
+            if (arguments.length > 2) {
+                extraArgs = Array.prototype.slice.apply(arguments);
+                extraArgs.splice(0, 2);
+            }
+            if (list && list.length) {
+                len = list.length;
+                while (i < len) {
+                    response = method.apply(null, [ list[i], i, list ].concat(extraArgs));
+                    if (response) {
+                        result.push(list[i]);
+                    }
+                    i += 1;
+                }
+            } else {
+                for (i in list) {
+                    if (list.hasOwnProperty(i)) {
+                        response = method.apply(null, [ list[i], i, list ].concat(extraArgs));
+                        if (response) {
+                            result.push(list[i]);
+                        }
+                    }
+                }
+            }
+            return result;
+        };
+        return filter;
+    });
+    //! node_modules/hbjs/src/utils/async/debounce.js
+    define("debounce", function() {
+        var debounce = function(func, wait, scope) {
+            var timeout;
+            return function() {
+                var context = scope || this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    timeout = null;
+                    func.apply(context, args);
+                }, wait);
+                return function() {
+                    clearTimeout(timeout);
+                    timeout = null;
+                };
+            };
+        };
+        return debounce;
+    });
     //! node_modules/hbjs/src/hb/directives/model.js
     define("hbModel", [ "hb.directive", "resolve", "query", "hb.debug", "debounce" ], function(directive, resolve, query, debug, debounce) {
         var $ = query, SELECTED_OPTIONS = "selectedOptions", CHECKED = "checked", VALUE = "value", INNER_TEXT = "innerText", RADIO = "radio";
@@ -2904,25 +3236,6 @@
         };
         return resolve;
     });
-    //! node_modules/hbjs/src/utils/async/debounce.js
-    define("debounce", function() {
-        var debounce = function(func, wait, scope) {
-            var timeout;
-            return function() {
-                var context = scope || this, args = arguments;
-                clearTimeout(timeout);
-                timeout = setTimeout(function() {
-                    timeout = null;
-                    func.apply(context, args);
-                }, wait);
-                return function() {
-                    clearTimeout(timeout);
-                    timeout = null;
-                };
-            };
-        };
-        return debounce;
-    });
     //! node_modules/hbjs/src/hb/directives/attr.js
     //! pattern /hb\-(src|alt|title|pattern|id|for|name|checked|disabled|value|href)\=/
     define("hbAttr", [ "hb.directive" ], function(directive) {
@@ -2999,319 +3312,6 @@
             };
         });
     });
-    //! node_modules/hbjs/src/hb/directives/repeat.js
-    //! pattern /hb\-repeat\=/
-    define("hbRepeat", [ "hb.directive", "each", "asyncRender", "hb.debug", "hb.eventStash", "filter", "apply", "debounce" ], function(directive, each, asyncRender, debug, events, filter, apply, debounce) {
-        events.REPEAT_RENDER_CHUNK_COMPLETE = "repeat::render_chunk_complete";
-        events.REPEAT_RENDER_COMPLETE = "repeat::render_complete";
-        directive("hbRepeat", function() {
-            var DOWN = "down";
-            var UP = "up";
-            function trimStrings(str, index, list) {
-                list[index] = str && str.trim();
-            }
-            var db = debug.register("hb-repeat");
-            var asyncEvents = db.stat("async events");
-            var pattern = /(\w+)\s+in\s+([\w\.]+)(\|(.*?)$)?$/;
-            return {
-                link: [ "scope", "el", "alias", "attr", "$app", function(scope, el, alias, attr, $app) {
-                    var template = el.children[0].outerHTML;
-                    var postDigest;
-                    el.removeChild(el.children[0]);
-                    var statement = alias.value;
-                    var match = statement.match(pattern);
-                    statement = [];
-                    if (match && match.length) {
-                        for (var i = 1; i < match.length; i += 1) {
-                            statement.push(match[i]);
-                        }
-                    }
-                    each(statement, trimStrings);
-                    var itemName = statement[0], watch = statement[1], filterFn = statement[3] && statement[3].split(":");
-                    var intv;
-                    var intvAfter;
-                    var currentList;
-                    var async = false;
-                    var topDown = attr.topDown && scope.$eval(attr.topDown) || 0;
-                    var bottomUp = attr.bottomUp && scope.$eval(attr.bottomUp) || 0;
-                    var asyncEnabled = topDown || bottomUp || false;
-                    var ar = asyncRender.create();
-                    var firstPass = true;
-                    var pending = false;
-                    ar.on(events.ASYNC_RENDER_CHUNK_END, asyncRenderNext);
-                    ar.on(events.ASYNC_RENDER_COMPLETE, renderComplete);
-                    function removeUntil(len) {
-                        var child;
-                        while (el.children.length > len) {
-                            child = el.children[el.children.length - 1];
-                            if (child.scope && child.scope !== scope) {
-                                child.scope.$destroy();
-                            }
-                            el.removeChild(child);
-                        }
-                    }
-                    function preRender(list, oldList) {
-                        var len = list && list.length || 0;
-                        clearTimeout(intvAfter);
-                        intvAfter = 0;
-                        if (!pending) {
-                            asyncEvents.next();
-                            currentList = list;
-                            ar.setup(bottomUp && firstPass ? UP : DOWN, topDown || bottomUp || len, len);
-                            render(list, oldList);
-                        } else if (async) {
-                            pending = true;
-                            currentList = list;
-                        }
-                    }
-                    function asyncRenderNext() {
-                        if (asyncEnabled && async) {
-                            clearTimeout(intv);
-                            intv = setTimeout(next);
-                        } else {
-                            next();
-                        }
-                    }
-                    function next() {
-                        clearTimeout(intv);
-                        if (ar.next()) {
-                            render(currentList);
-                            if (asyncEnabled && async) {
-                                asyncEvents.inc();
-                                scope.$emit(events.REPEAT_RENDER_CHUNK_COMPLETE, currentList, ar.index, ar.maxLen);
-                            }
-                        }
-                    }
-                    function renderComplete() {
-                        clearInterval(intv);
-                        clearInterval(intvAfter);
-                        intv = null;
-                        intvAfter = null;
-                        if (asyncEnabled && async) {
-                            asyncEvents.inc();
-                            scope.$emit(events.REPEAT_RENDER_COMPLETE, currentList);
-                        }
-                        firstPass = !(currentList && currentList.length);
-                        if (pending) {
-                            async = false;
-                            pending = false;
-                            intv = setTimeout(function() {
-                                clearTimeout(intv);
-                                preRender(currentList);
-                                scope.$digest();
-                            });
-                        }
-                    }
-                    function createRow(list, el, index) {
-                        var data = {};
-                        data[itemName] = list[index];
-                        data.$index = index;
-                        var s = scope.$new();
-                        var child = $app.addChild(el, template, s, data, ar.direction === ar.up);
-                        if (ar.size) {
-                            s.$digest();
-                        }
-                        return child;
-                    }
-                    function updateRow(list, child, index) {
-                        var s = child.scope;
-                        s[itemName] = list[index];
-                        s.$index = index;
-                    }
-                    function destroy() {
-                        clearInterval(intv);
-                    }
-                    function findChildIndex(index) {
-                        var s, e;
-                        for (var i = 0, len = el.children.length; i < len; i += 1) {
-                            e = el.children[i];
-                            s = el.children[i].scope;
-                            if (s && s.$index === index) {
-                                return e;
-                            }
-                        }
-                    }
-                    function render(list, oldList) {
-                        var len, child;
-                        if (list && (len = list.length)) {
-                            removeUntil(len);
-                            while (!ar.complete && !ar.atChunkEnd && list[ar.index]) {
-                                child = findChildIndex(ar.index);
-                                if (child && (!child.scope || child.scope.$index !== ar.index)) {
-                                    child = null;
-                                }
-                                if (!child) {
-                                    async = true;
-                                    child = createRow(list, el, ar.index);
-                                } else if (list[ar.index]) {
-                                    updateRow(list, child, ar.index);
-                                    async = false;
-                                }
-                                ar.inc();
-                            }
-                        } else {
-                            removeUntil(0);
-                        }
-                    }
-                    function setHideShowClasses(index, active, inactive) {
-                        if (!el.children[index].classList.contains(active)) {
-                            el.children[index].classList.add(active);
-                            if (el.children[index].classList.contains(inactive)) {
-                                el.children[index].classList.remove(inactive);
-                            }
-                        }
-                    }
-                    function releasePost() {
-                        postDigest = null;
-                    }
-                    function onPostDigestFor$filter() {
-                        var fn = filterFn[0];
-                        var show = scope.$eval(filterFn[1]);
-                        var hide = scope.$eval(filterFn[2]);
-                        for (var i = 0; i < scope.$c.length; i += 1) {
-                            var val = scope.$c[i].$eval(fn);
-                            if (val) {
-                                setHideShowClasses(i, show, hide);
-                            } else if (!val) {
-                                setHideShowClasses(i, hide, show);
-                            }
-                        }
-                        releasePost();
-                    }
-                    function checkFoPost() {
-                        if (!postDigest) {
-                            postDigest = onPostDigestFor$filter;
-                            scope.$$postDigest(postDigest);
-                        }
-                    }
-                    scope.$watch(watch, preRender, true);
-                    if (filterFn) {
-                        scope.$watch(checkFoPost);
-                    }
-                    scope.$on("$destroy", destroy);
-                } ]
-            };
-        });
-    });
-    //! node_modules/hbjs/src/hb/utils/asyncRender.js
-    define("asyncRender", [ "dispatcher", "hb.eventStash" ], function(dispatcher, events) {
-        var UP = "up";
-        var DOWN = "down";
-        events.ASYNC_RENDER_CHUNK_END = "async::chunk_end";
-        events.ASYNC_RENDER_COMPLETE = "async::complete";
-        function AsyncRender() {
-            this.down = DOWN;
-            this.up = UP;
-            this.direction = DOWN;
-            this.index = 0;
-            this.len = 0;
-            this.maxLen = 0;
-            this.size = 0;
-            this.complete = false;
-            this.atChunkEnd = false;
-            dispatcher(this);
-        }
-        var p = AsyncRender.prototype;
-        p.setup = function(direction, size, maxLen) {
-            this.direction = direction;
-            this.size = size;
-            this.len = 0;
-            this.maxLen = maxLen;
-            this.atChunkEnd = false;
-            this.complete = false;
-            this.index = direction === DOWN ? 0 : maxLen - 1;
-        };
-        p.inc = function() {
-            if (this.complete || this.atChunkEnd) {
-                return;
-            }
-            if (this.direction === DOWN) {
-                if (this.index < this.len) {
-                    this.index += 1;
-                    if (this.index === this.len) {
-                        this.finishChunk();
-                    }
-                } else {
-                    this.finishChunk();
-                }
-            } else {
-                if (this.index > this.maxLen - this.len - 1) {
-                    this.index -= 1;
-                }
-                if (this.index <= this.maxLen - this.len - 1) {
-                    this.finishChunk();
-                }
-            }
-        };
-        p.finishChunk = function() {
-            if (!this.complete && !this.atChunkEnd) {
-                this.atChunkEnd = true;
-                if ((this.index === -1 || this.index === this.maxLen) && this.len === this.maxLen) {
-                    this.finish();
-                }
-                this.dispatch(events.ASYNC_RENDER_CHUNK_END);
-            }
-        };
-        p.next = function() {
-            if (this.complete) {
-                this.dispatch(events.ASYNC_RENDER_COMPLETE);
-                this.direction = DOWN;
-                return false;
-            }
-            var increase = Math.min(this.size, this.maxLen);
-            if (!increase) {
-                return false;
-            }
-            if (this.len + increase > this.maxLen) {
-                increase = this.maxLen - this.len;
-            }
-            if (this.direction === UP) {
-                this.index = this.maxLen - this.len - 1;
-            }
-            this.len += increase;
-            this.atChunkEnd = false;
-            return true;
-        };
-        p.finish = function() {
-            this.complete = true;
-        };
-        return {
-            create: function() {
-                return new AsyncRender();
-            }
-        };
-    });
-    //! node_modules/hbjs/src/utils/data/filter.js
-    define("filter", function() {
-        var filter = function(list, method) {
-            var i = 0, len, result = [], extraArgs, response;
-            if (arguments.length > 2) {
-                extraArgs = Array.prototype.slice.apply(arguments);
-                extraArgs.splice(0, 2);
-            }
-            if (list && list.length) {
-                len = list.length;
-                while (i < len) {
-                    response = method.apply(null, [ list[i], i, list ].concat(extraArgs));
-                    if (response) {
-                        result.push(list[i]);
-                    }
-                    i += 1;
-                }
-            } else {
-                for (i in list) {
-                    if (list.hasOwnProperty(i)) {
-                        response = method.apply(null, [ list[i], i, list ].concat(extraArgs));
-                        if (response) {
-                            result.push(list[i]);
-                        }
-                    }
-                }
-            }
-            return result;
-        };
-        return filter;
-    });
     //! src/application/bhApp.js
     internal("bhApp", [ "app", "hb.debug.dev", "hb.directive", "each" ], function(app, debug, directive, each) {
         exports.boot = function() {
@@ -3386,16 +3386,26 @@
                                 name: "height",
                                 label: "Height",
                                 subtext: "(e:5ft 2in)",
-                                pattern: "d+ft(s+d+in)?$",
+                                pattern: "\\d+ft(\\s+\\d+in)?",
                                 error: "Please enter your height like (5ft 2in).",
                                 classes: "mdl-textfield-sml"
                             },
                             relationship: {
                                 name: "relationship",
                                 label: "Relationship Status",
-                                pattern: "[\\w\\s]+$",
-                                error: "Please describe your relationship status.",
-                                classes: "mdl-textfield-long"
+                                options: [ {
+                                    name: "married",
+                                    label: "Married"
+                                }, {
+                                    name: "single",
+                                    label: "Single"
+                                }, {
+                                    name: "divorced",
+                                    label: "Divorced"
+                                }, {
+                                    name: "other",
+                                    label: "Other"
+                                } ]
                             },
                             mailingAddress: {
                                 name: "mailingAddress",
@@ -3421,16 +3431,17 @@
                             zip: {
                                 name: "zip",
                                 label: "Zipcode",
-                                pattern: "\\d{5}(\\-\\d+)?$",
+                                pattern: "\\d{5}",
                                 error: "Please enter your zipcode",
                                 classes: "mdl-textfield-sml"
                             },
                             childrenAges: {
                                 name: "childrenAges",
                                 label: "Children/Ages",
+                                subtext: "(e:Boy 10, Girl 8, ...)",
                                 pattern: "",
                                 error: "Please enter your children's ages",
-                                classes: "mdl-textfield-sml"
+                                classes: "mdl-textfield-long"
                             },
                             pets: {
                                 name: "pets",
@@ -3491,72 +3502,44 @@
                             },
                             inGeneralHowWouldYouRateYourOverallHealth: {
                                 name: "inGeneralHowWouldYouRateYourOverallHealth",
-                                label: "In general how would you rate your overall health",
+                                label: "In general how would you rate your overall health?",
                                 pattern: "",
                                 error: "Please rate your overall health",
                                 classes: "mdl-textfield-long"
                             },
                             mainHealthConcerns: {
                                 name: "mainHealthConcerns",
-                                label: "Main Health Concerns",
+                                label: "What are your main health concerns?",
                                 pattern: "",
                                 error: "Please enter your main health concerns",
                                 classes: "mdl-textfield-long"
                             },
-                            anyOtherConcerns: {
-                                name: "anyOtherConcerns",
-                                label: "Any other concerns",
-                                pattern: "",
-                                error: "Please enter all your concerns",
-                                classes: "mdl-textfield-long"
-                            },
                             atWhatPointInYourLifeHaveYouFeltYourBest: {
                                 name: "atWhatPointInYourLifeHaveYouFeltYourBest",
-                                label: "At What point in your life have you felt your best",
+                                label: "At what point in your life have you felt your best?",
                                 pattern: "",
                                 error: "Please enter the time that you have felt your best",
                                 classes: "mdl-textfield-long"
                             },
-                            wellnessGoals: {
-                                name: "wellnessGoals",
-                                label: "Wellness Goals",
-                                pattern: "",
-                                error: "Please enter your wellness goals",
-                                classes: "mdl-textfield-long"
-                            },
-                            howIsYourSleep: {
-                                name: "howIsYourSleep",
-                                label: "How is your sleep Goals",
-                                pattern: "",
-                                error: "Please enter if you sleep good or not",
-                                classes: "mdl-textfield-long"
-                            },
                             howManyHoursDoYouSleep: {
                                 name: "howManyHoursDoYouSleep",
-                                label: "How many hours do you sleep?",
+                                label: "How many hours do you sleep per night?",
                                 pattern: "",
                                 error: "Please enter how many hours you sleep",
                                 classes: "mdl-textfield-long"
                             },
                             doYouWakeUpAtNight: {
                                 name: "doYouWakeUpAtNight",
-                                label: "Do you wake up at night?",
+                                label: "Do you wake up during the night?",
                                 pattern: "",
                                 error: "Please enter if you wake up at night?",
                                 classes: "mdl-textfield-long"
                             },
                             timeToBed: {
                                 name: "timeToBed",
-                                label: "Time to Bed",
+                                label: "What time do you go to bed?",
                                 pattern: "",
                                 error: "Please enter the time you usually go to bed",
-                                classes: "mdl-textfield-long"
-                            },
-                            timeWakeUp: {
-                                name: "timeWakeUp",
-                                label: "Time wake up",
-                                pattern: "",
-                                error: "Please enter the time you usually wake up",
                                 classes: "mdl-textfield-long"
                             },
                             howDoYouFeelWhenYouWakeUp: {
@@ -3568,16 +3551,9 @@
                             },
                             anyPainStiffnessOrSwelling: {
                                 name: "anyPainStiffnessOrSwelling",
-                                label: "Any Pain,Stiffness,or swelling?",
+                                label: "Do you have any pain, stiffness,or swelling?",
                                 pattern: "",
                                 error: "Please enter if you have any pain stiffness or swelling",
-                                classes: "mdl-textfield-long"
-                            },
-                            whatDoYouDoForIt: {
-                                name: "whatDoYouDoForIt",
-                                label: "What do you do for it?",
-                                pattern: "",
-                                error: "Please enter what you do for it",
                                 classes: "mdl-textfield-long"
                             },
                             howIsYourDigestion: {
@@ -3589,35 +3565,49 @@
                             },
                             doYouExperienceConstipationBloatingDiarrhea: {
                                 name: "doYouExperienceConstipationBloatingDiarrhea",
-                                label: "Do you experience Constipation,Bloating,Diarrhea?",
+                                label: "Do you experience constipation, bloating, or diarrhea?",
                                 pattern: "",
                                 error: "Please enter if you have any of the listed above",
                                 classes: "mdl-textfield-long"
                             },
                             doYouHaveAllergiesOrSensitivities: {
                                 name: "doYouHaveAllergiesOrSensitivities",
-                                label: "Do you have Allergies or Sensitivities?",
+                                label: "Do you have allergies or sensitivities?",
                                 pattern: "",
                                 error: "Please enter what allergies or sensitivities that you have",
                                 classes: "mdl-textfield-long"
                             },
                             doYouTakeAnyMedicationSupplementsOrVitamins: {
                                 name: "doYouTakeAnyMedicationSupplementsOrVitamins",
-                                label: "Do you take any medication, supplements, or Vitamins?",
+                                label: "Do you take any medication, supplements, or vitamins?",
                                 pattern: "",
                                 error: "Please enter if you take any medication listed above",
                                 classes: "mdl-textfield-long"
                             },
                             howMuchStressDoYouHaveInYourLifeRightNow: {
                                 name: "howMuchStressDoYouHaveInYourLifeRightNow",
-                                label: "How much stress do you have in your life right now?(On a scale of 1-10)",
-                                pattern: "",
-                                error: "Please enter the stress you have in your life now",
+                                label: "How much stress do you have right now?",
+                                options: [ {
+                                    name: "stress-none",
+                                    label: "None"
+                                }, {
+                                    name: "stress-moderate",
+                                    label: "Moderate"
+                                }, {
+                                    name: "stress-decent",
+                                    label: "Decent"
+                                }, {
+                                    name: "stress-surviving",
+                                    label: "Surviving"
+                                }, {
+                                    name: "stress-overwhelmed",
+                                    label: "Overwhelmed"
+                                } ],
                                 classes: "mdl-textfield-long"
                             },
                             whatIsYOurPrimaryStressInYourLifeAtThisTime: {
                                 name: "whatIsYOurPrimaryStressInYourLifeAtThisTime",
-                                label: "What is your primary stress in your life at this time?",
+                                label: "What is your primary stress in your life?",
                                 pattern: "",
                                 error: "Please enter what is the primary stress in your life now",
                                 classes: "mdl-textfield-long"
@@ -3625,20 +3615,27 @@
                             howOftenDoYouFeelRelaxedOrAtPeace: {
                                 name: "howOftenDoYouFeelRelaxedOrAtPeace",
                                 label: "How Often do you feel relaxed or at peace?",
-                                pattern: "",
-                                error: "Please enter how often you feel relaxed or at peace",
-                                classes: "mdl-textfield-long"
-                            },
-                            mostOfTheTimeSometimesRarelyOrNever: {
-                                name: "mostOfTheTimeSometimesRarelyOrNever",
-                                label: "Most of the time, Sometimes, Rarely, or Never",
-                                pattern: "",
-                                error: "Please enter if you feel stressed sometimes, rareley, or never",
+                                options: [ {
+                                    name: "always",
+                                    label: "Always"
+                                }, {
+                                    name: "often",
+                                    label: "Often"
+                                }, {
+                                    name: "sometimes",
+                                    label: "Sometimes"
+                                }, {
+                                    name: "rarely",
+                                    label: "Rarely"
+                                }, {
+                                    name: "never",
+                                    label: "Never"
+                                } ],
                                 classes: "mdl-textfield-long"
                             },
                             areYouBeingTreatedForAnyEmotionalOrPhysicalConditionAtThisTime: {
                                 name: "areYouBeingTreatedForAnyEmotionalOrPhysicalConditionAtThisTime",
-                                label: "Are you being treated for any emotional or physical condition at this time?",
+                                label: "Are you being treated for any emotional or physical condition?",
                                 pattern: "",
                                 error: "Please enter if you are being treated for any emotional or physical condition now",
                                 classes: "mdl-textfield-long"
@@ -3673,9 +3670,16 @@
                             },
                             doYouExercise: {
                                 name: "doYouExercise",
-                                label: "Do you exercise?",
+                                label: "How many hours a week do you exercise?",
                                 pattern: "",
-                                error: "Please enter if you exercise or not",
+                                error: "Please enter the hours you exercise per week.",
+                                classes: "mdl-textfield-long"
+                            },
+                            howDoYouExercise: {
+                                name: "howDoYouExercise",
+                                label: "What do you do for exercise?",
+                                pattern: "",
+                                error: "Please enter what you do for exercise.",
                                 classes: "mdl-textfield-long"
                             },
                             howSatisfiedAreYouWithYourExerciseLevel: {
@@ -3685,53 +3689,53 @@
                                 error: "Please enter how satisfied you are with your exercise level",
                                 classes: "mdl-textfield-long"
                             },
-                            whatDoYouLikeToDoForPhysicalActivity: {
-                                name: "whatDoYouLikeToDoForPhysicalActivity",
-                                label: "How satisfied are you with your physical activity?",
-                                pattern: "",
-                                error: "Please enter how satisfied you are with your physical activity",
-                                classes: "mdl-textfield-long"
-                            },
                             howSatisfiedAreYouWithYourCurrentEatingAndNutrition: {
                                 name: "howSatisfiedAreYouWithYourCurrentEatingAndNutrition",
-                                label: "How Satisfied are you with your current eating and nutrition?",
+                                label: "How satisfied are you with your current eating and nutrition?",
                                 pattern: "",
                                 error: "Please enter how your are with your eating and nutrition now",
                                 classes: "mdl-textfield-long"
                             },
                             howSatisfiedAreYouWithYourWeight: {
                                 name: "howSatisfiedAreYouWithYourWeight",
-                                label: "How Satisfied are you with your with your weight ",
+                                label: "How satisfied are you with your with your weight?",
                                 pattern: "",
                                 error: "Please enter how your weight or with is satisfied",
                                 classes: "mdl-textfield-long"
                             },
                             howSatisfiedAreYouWithYourLifeInGeneral: {
                                 name: "HowSatisfiedAreYouWithYourLifeInGeneral",
-                                label: "How Satisfied are your life in general ",
+                                label: "How satisfied is your life in general?",
                                 pattern: "",
                                 error: "Please enter how your life is in general",
                                 classes: "mdl-textfield-long"
                             },
                             whatWouldYouLikeToDoToChangeForTheBetter: {
                                 name: "whatWouldYouLikeToDoToChangeForTheBetter",
-                                label: "What would you like to do to change for the better? ",
+                                label: "What would you like to do to change for the better?",
                                 pattern: "",
                                 error: "Please enter what you would like to do to change for the better.",
                                 classes: "mdl-textfield-long"
                             },
                             howWouldYouRateYourOverallSelfEsteem: {
                                 name: "howWouldYouRateYourOverallSelfEsteem",
-                                label: "How would you rate your overall Self-Esteem ",
-                                pattern: "",
-                                error: "Please enter what you would rate your Self-Esteem?",
-                                classes: "mdl-textfield-long"
-                            },
-                            ExcellentVeryGoodGoodFairOrPoor: {
-                                name: "ExcellentVeryGoodGoodFairOrPoor",
-                                label: "Excellent, Very Good, Good, Fair, or Poor?",
-                                pattern: "",
-                                error: "Please enter one of these on how your are doing",
+                                label: "How would you rate your overall Self-Esteem?",
+                                options: [ {
+                                    name: "esteem-poor",
+                                    label: "Poor"
+                                }, {
+                                    name: "esteem-fair",
+                                    label: "Fair"
+                                }, {
+                                    name: "esteem-good",
+                                    label: "Good"
+                                }, {
+                                    name: "esteem-very-good",
+                                    label: "Very Good"
+                                }, {
+                                    name: "esteem-excellent",
+                                    label: "Excellent"
+                                } ],
                                 classes: "mdl-textfield-long"
                             },
                             whatPositiveQualitiesDoYouHaveThatWillHelpYouReachYourGoals: {
@@ -3750,7 +3754,7 @@
                             },
                             ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime: {
                                 name: "ifMoneyOrTimeWereNotRelativeHowWouldYouLikeToSpendYourTime",
-                                label: "If money or time wer not relative, how would you like to spend your time?",
+                                label: "If money or time were not relative, how would you like to spend your time?",
                                 pattern: "",
                                 error: "Please enter what you would do to this question",
                                 classes: "mdl-textfield-long"
@@ -3771,7 +3775,7 @@
                             },
                             whatAreYourHobbiesOrSpecialInterests: {
                                 name: "whatAreYourHobbiesOrSpecialInterests",
-                                label: "What are your hobbies or special interests",
+                                label: "What are your hobbies or special interests?",
                                 pattern: "",
                                 error: "Please enter what your hobbies or special interests are",
                                 classes: "mdl-textfield-long"
@@ -3792,92 +3796,46 @@
                             },
                             whatAreYourExpectationsForMeAsACoach: {
                                 name: "whatAreYourExpectationsForMeAsACoach",
-                                label: "What are your expectations for me as a coach?",
+                                label: "What are your expectations for me as your coach?",
                                 pattern: "",
                                 error: "Please enter what your expectations are for me as a coach",
                                 classes: "mdl-textfield-long"
                             },
-                            whatWouldYouLikeMeToWorkOn: {
-                                name: "whatWouldYouLikeMeToWorkOn",
-                                label: "What would you like me to work on?",
-                                pattern: "",
-                                error: "Please enter what you want me to work on",
-                                classes: "mdl-textfield-long"
-                            },
-                            goalSetting: {
-                                name: "goalSetting",
-                                label: "Goal setting",
-                                pattern: "",
-                                error: "Please enter your goal setting is",
-                                classes: "mdl-textfield-long"
-                            },
-                            recipes: {
-                                name: "recipes",
-                                label: "Recipes",
-                                pattern: "",
-                                error: "Please enter your recipes",
-                                classes: "mdl-textfield-long"
-                            },
-                            exerciseIdeasAndRoutines: {
-                                name: "exerciseIdeasAndRoutines",
-                                label: "Exercise ideas and routines",
-                                pattern: "",
-                                error: "Please enter your exercise ideas and routines",
-                                classes: "mdl-textfield-long"
-                            },
-                            distressingTechniques: {
-                                name: "distressingTechniques",
-                                label: "Distressing techniques",
-                                pattern: "",
-                                error: "Please enter your distressing techniques",
-                                classes: "mdl-textfield-long"
-                            },
-                            spiritualHelp: {
-                                name: "spiritualHelp",
-                                label: "Spiritual Help",
-                                pattern: "",
-                                error: "Please enter your spiritual help",
-                                classes: "mdl-textfield-long"
-                            },
-                            emotionalSupport: {
-                                name: "emotionalSupport",
-                                label: "Emotional support",
-                                pattern: "",
-                                error: "Please enter your emotional support",
-                                classes: "mdl-textfield-long"
-                            },
-                            wouldYouLikeToCommunicateThroughEmails: {
-                                name: "wouldYouLikeToCommunicateThroughEmails",
-                                label: "Would you prefer to communicate through?",
+                            whatAreasDoYouWantToWorkOnWithMe: {
+                                name: "whatAreasDoYouWantToWorkOnWithMe",
+                                label: "What areas do you want to work on with me?",
                                 options: [ {
-                                    name: "email",
-                                    label: "Email",
-                                    selected: true
+                                    name: "nutrition",
+                                    label: "Nutrition",
+                                    selected: false
                                 }, {
-                                    name: "text",
-                                    label: "text"
+                                    name: "exercise",
+                                    label: "Exercise",
+                                    selected: false
                                 }, {
-                                    name: "phone",
-                                    label: "phone"
-                                } ]
-                            },
-                            wouldYouFeelComfortableUsingSkype: {
-                                name: "wouldYouFeelComfortableUsingSkype",
-                                label: "Would you feel comfortable using Skype",
-                                options: [ {
-                                    name: "no",
-                                    label: "No",
-                                    selected: true
+                                    name: "de-stressing",
+                                    label: "De-Stressing",
+                                    selected: false
                                 }, {
-                                    name: "yes",
-                                    label: "Yes"
-                                } ]
+                                    name: "relationships",
+                                    label: "Relationships",
+                                    selected: false
+                                }, {
+                                    name: "spirituality",
+                                    label: "Spirituality",
+                                    selected: false
+                                }, {
+                                    name: "emotionalSupport",
+                                    label: "Emotional Support",
+                                    selected: false
+                                } ],
+                                classes: "mdl-textfield-long"
                             },
                             isThereAnythingElseYouWouldLikeMeToKnowAboutYouThatWouldHelpOurCoachingSessionTogether: {
                                 name: "isThereAnythingElseYouWouldLikeMeToKnowAboutYouThatWouldHelpOurCoachingSessionTogether",
-                                label: "Is there anything else you would like me to know about you that would help our coaching session together?",
+                                label: "Is there anything else you would like me to know about you?",
                                 pattern: "",
-                                error: "Please enter if there is anything else you would like me to know about you that would help our coaching session together",
+                                error: "Please enter if there is anything else you would like me to know about you",
                                 classes: "mdl-textfield-full"
                             },
                             doYouHaveAnyQuestionsForMeAsYourCoach: {
@@ -3886,6 +3844,26 @@
                                 pattern: "",
                                 error: "Please enter if there is anything else you would like me to know about you that would help our coaching session together",
                                 classes: "mdl-textfield-full"
+                            },
+                            whichWaysCanICommunicateWithYou: {
+                                name: "whichWaysCanICommunicateWithYou",
+                                label: "Which ways can I communicate with you?",
+                                options: [ {
+                                    name: "by-text",
+                                    label: "Text"
+                                }, {
+                                    name: "by-phone",
+                                    label: "Phone"
+                                }, {
+                                    name: "by-email",
+                                    label: "Email"
+                                }, {
+                                    name: "by-skype",
+                                    label: "Skype"
+                                }, {
+                                    name: "in-person",
+                                    label: "In Person (local only)"
+                                } ]
                             }
                         }
                     };
@@ -4201,6 +4179,19 @@
         };
         api.graph = graph;
         return api;
+    });
+    //! src/application/form-fields/checkbox/bh-checkbox.js
+    define("bhCheckbox", [ "hb.directive" ], function(directive) {
+        directive("bhCheckbox", function() {
+            return {
+                scope: true,
+                replace: true,
+                tpl: "<div class=\"mdl-textfield {{::field.classes}} mdl-js-textfield mdl-textfield--floating-label is-focused\" hb-alt=\"field.label\"> <label class=\"mdl-textfield__label\" hb-for=\"field.name\">{{::field.label}} <span class=\"subtext\">{{::field.subtext}}</span></label> <div hb-id=\"field.name\" hb-repeat=\"option in field.options\"> <label class=\"mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect\" hb-for=\"option.name\"> <input type=\"checkbox\" hb-id=\"option.name\" class=\"mdl-checkbox__input\" hb-name=\"field.name\" hb-value=\"option.name\" hb-model=\"field.value\" hb-checked=\"option.selected\"> <span class=\"mdl-checkbox__label\">{{option.label}}</span> </label> </div></div>",
+                link: [ "scope", "el", "alias", function(scope, el, alias) {
+                    scope.field = scope.$eval(alias.value);
+                } ]
+            };
+        });
     });
     //! src/application/form-fields/input/bh-input.js
     define("bhInput", [ "hb.directive" ], function(directive) {

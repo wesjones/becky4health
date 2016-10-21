@@ -31,11 +31,25 @@ body {
   width: 100%;
   margin-bottom: 20px;
 }
+.main-form .mdl-textfield__label {
+  white-space: pre-wrap;
+  overflow: visible;
+}
+.main-form .mdl-textfield__input {
+  border-bottom-width: 0;
+}
+.main-form .mdl-textfield__input:focus {
+  border-bottom-width: 1px;
+}
+.main-form .mdl-textfield--floating-label .mdl-textfield__label {
+  top: -2px;
+}
 .main-form .mdl-textfield {
   min-width: 150px;
   width: calc(50% - 40px);
   max-width: 250px;
   margin-left: 20px;
+  vertical-align: top;
 }
 .main-form .mdl-textfield.mdl-textfield-mini {
   min-width: 40px;
@@ -88,7 +102,7 @@ body {
     margin: 10px;
   }
   .main-form .mdl-textfield {
-    width: calc(48% - 20px);
+    width: calc(100% - 20px);
     min-width: 100px;
   }
 }

@@ -50,11 +50,11 @@ if(isset($_POST['email'])) {
 
 
 
-    $first_name = "Health"; //$_POST['first_name']; // required
+    $first_name = $_POST['first_name']; // required
 
-    $last_name = "Form";//$_POST['last_name']; // required
+    $last_name = $_POST['last_name']; // required
 
-    $email_from = "no-reply@becky4health.com";//"$_POST['email']; // required
+    $email_from = $_POST['email']; // required
 
     $telephone = $_POST['phone']; // not required
 
@@ -110,21 +110,32 @@ if(isset($_POST['email'])) {
 
     }
 
+    function fromCamelCase($camelCaseString) {
+        $re = '/(?<=[a-z])(?=[A-Z])/x';
+        $a = preg_split($re, $camelCaseString);
+        return join($a, " " );
+    }
+
 
     foreach($_POST as $k=>$v) {
-        $email_message .= "".$k.": ".clean_string($v)."\n";
+        $email_message .= "<tr><td style=\"border-bottom:1px solid #666;width:200px;\">".fromCamelCase($k)."</td><td style=\"border-bottom:1px solid #666;\">".clean_string($v)."</td></tr>\n";
     }
 
 
 // create email headers
 
-$headers = 'From: '.$email_from."\r\n".
+$headers = 'MIME-Version: 1.0' . "\ r\n".
+    'Content-type: text/html; charset=iso-8859-1' . "\ r\n".
+    'From: '.$first_name.' '.$last_name.'<'.$email_from."> \r\n".
+    'Reply-To: '.$email_from."\r\n" .
+    'X-Mailer: PHP/' . phpversion();
 
-'Reply-To: '.$email_from."\r\n" .
+$message = '<html><body>';
+$message .= '<h1 style="color:#f40;">About '.$first_name.' '.$last_name.',</h1>';
+$message .= '<table style="border:1px solid #000;">'.$email_message.'</table>';
+$message .= '</body></html>';
 
-'X-Mailer: PHP/' . phpversion();
-
-@mail($email_to, $email_subject, $email_message, $headers);
+@mail($email_to, $email_subject, $message, $headers);
 
 ?>
 
@@ -133,8 +144,7 @@ $headers = 'From: '.$email_from."\r\n".
 <!-- include your own success html here -->
 
 
-
-Thank you for contacting us. We will be in touch with you very soon.
+<h3 style="text-align:center">Thank you for filling out the Initial Consultation Questionnaire from my Website. I look forward to meeting with you soon!  Sincerely, Becky Jones</h3>
 
 
 
