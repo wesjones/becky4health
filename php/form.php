@@ -126,7 +126,7 @@ if(isset($_POST['email'])) {
 
 $headers = 'MIME-Version: 1.0' . "\ r\n".
     'Content-type: text/html; charset=iso-8859-1' . "\ r\n".
-    'From: '.$first_name.' '.$last_name.'<'.$email_from."> \r\n".
+    'From: Health Survey Form<healthform@becky4health.com>'." \r\n".
     'Reply-To: '.$email_from."\r\n" .
     'X-Mailer: PHP/' . phpversion();
 
