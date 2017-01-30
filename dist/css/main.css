@@ -1,0 +1,176 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #efefef;
+}
+.hz-center {
+  width: calc(80%);
+  margin-left: auto;
+  margin-right: auto;
+}
+.sizzle {
+  width: 100%;
+  text-align: center;
+}
+.sizzle img {
+  width: 100%;
+  max-width: 888px;
+}
+.main-logo {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.main-form {
+  margin: 20px;
+}
+.main-form .main-card-wide {
+  width: 100%;
+  margin-bottom: 20px;
+}
+.main-form .mdl-textfield__label {
+  white-space: pre-wrap;
+  overflow: visible;
+}
+.main-form .mdl-textfield__input {
+  border-bottom-width: 0;
+}
+.main-form .mdl-textfield__input:focus {
+  border-bottom-width: 1px;
+}
+.main-form .mdl-textfield--floating-label .mdl-textfield__label {
+  top: -2px;
+}
+.main-form .mdl-textfield {
+  min-width: 150px;
+  width: calc(50% - 40px);
+  max-width: 250px;
+  margin-left: 20px;
+  vertical-align: top;
+}
+.main-form .mdl-textfield.mdl-textfield-mini {
+  min-width: 40px;
+  width: 40px;
+  max-width: 40px;
+}
+.main-form .mdl-textfield.mdl-textfield-mini input {
+  width: 40px;
+}
+.main-form .mdl-textfield.mdl-textfield-sml {
+  min-width: 100px;
+  width: 100px;
+  max-width: 100px;
+}
+.main-form .mdl-textfield.mdl-textfield-sml input {
+  width: 100px;
+}
+.main-form .mdl-textfield.mdl-textfield-med {
+  min-width: 150px;
+  width: 150px;
+  max-width: 150px;
+}
+.main-form .mdl-textfield.mdl-textfield-med input {
+  width: 150px;
+}
+.main-form .mdl-textfield.mdl-textfield-long {
+  min-width: 0;
+  width: calc(100% - 40px);
+  max-width: 400px;
+}
+.main-form .mdl-textfield.mdl-textfield-long input {
+  width: 100%;
+}
+.main-form .mdl-textfield.mdl-textfield-full {
+  min-width: 0;
+  width: calc(100% - 40px);
+  max-width: calc(100% - 40px);
+}
+.main-form .mdl-textfield.mdl-textfield-full input {
+  width: 100%;
+}
+.main-form .subtext {
+  font-size: 11px;
+}
+.main-form .mdl-radio {
+  margin: 0 6px 0 0;
+}
+@media only screen and (max-width: 500px) {
+  .main-form {
+    margin: 10px;
+  }
+  .main-form .mdl-textfield {
+    width: calc(100% - 20px);
+    min-width: 100px;
+  }
+}
+.bh-packages {
+  border: 1px solid #CCC;
+  padding: 10px;
+  margin: 10px;
+}
+.bh-packages-header {
+  padding: 10px;
+  background-color: #97c249;
+  color: #FFF;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.bh-package-columns {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: row;
+  /* works with row or column */
+  flex-direction: row;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+}
+.bh-package-column {
+  padding: 20px 10px;
+  width: 100%;
+  background-color: #d8e8bc;
+}
+.bh-package-column:first-child {
+  background-color: #FFF;
+}
+.bh-package-column:last-child {
+  background-color: #c3dc95;
+}
+.bh-package-column p {
+  color: #909090;
+}
+.bh-package-column ul > li {
+  list-style-type: none;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+}
+.bh-package-column ul {
+  padding: 0;
+}
+.bh-package-column .item-title {
+  color: #97c249;
+}
+.bh-package-column .item-title:after {
+  content: ":";
+}
+.bh-package-column .item-value {
+  color: #2c2c2c;
+}
+.bh-package-column-header {
+  color: #2c2c2c;
+  font-size: 24px;
+}
+@media screen and (max-width: 600px) {
+  .bh-packages-header,
+  .bh-package-column-header {
+    font-size: 20px;
+  }
+  .bh-package-column ul > li {
+    font-size: 14px;
+  }
+}

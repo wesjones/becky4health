@@ -56,7 +56,7 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive', 'each'],
                                 name: 'gender',
                                 label: 'Gender',
                                 options: [
-                                    {name: 'male', label: 'Male', selected: true},
+                                    {name: 'male', label: 'Male'},
                                     {name: 'female', label: 'Female'}
                                 ]
                             },
@@ -125,16 +125,16 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive', 'each'],
                                 name: 'pets',
                                 label: 'Pets',
                                 options: [
-                                    {name: 'no', label: 'No', selected: true},
-                                    {name: 'yes', label: 'Yes'}
+                                    {name: 'no-pets', label: 'No', selected: true},
+                                    {name: 'yes-pets', label: 'Yes'}
                                 ]
                             },
                             doYouSmoke: {
                                 name: 'doYouSmoke',
                                 label: 'Do you Smoke?',
                                 options: [
-                                    {name: 'no', label: 'No', selected: true},
-                                    {name: 'yes', label: 'Yes'}
+                                    {name: 'non-smoker', label: 'No', selected: true},
+                                    {name: 'smoker', label: 'Yes'}
                                 ]
 
                             },
@@ -142,8 +142,8 @@ internal('bhApp', ['app', 'hb.debug.dev', 'hb.directive', 'each'],
                                 name: 'drinkAlcohol',
                                 label: 'Drink Alcohol?',
                                 options: [
-                                    {name: 'no', label: 'No', selected: true},
-                                    {name: 'yes', label: 'Yes'}
+                                    {name: 'no-alcohol', label: 'No', selected: true},
+                                    {name: 'yes-alcoho', label: 'Yes'}
                                 ]
                             },
                             occupation: {
