@@ -9,10 +9,10 @@ module.exports = function (grunt) {
             wrap: 'bh', // this is your global namespace
             name: "app",
             filename: 'widgets',
-            build: 'dist',
+            build: 'dist/js',
             scripts: {
                 ignorePatterns: false,
-                inspect: ['sandbox/index.html', 'src/**/**.html', 'src/**/**.js'],
+                inspect: ['index.html', 'src/**/**.html', 'src/**/**.js'],
                 src: ['src/bootstrap.js', 'src/application/**/*.js', 'src/widgets/**/*.js', '!src/widgets/*/bootstrap.js'], // search through all JS file in src src directory
                 import: ['app', 'hbd.cloak', 'hbd.html', 'hbd.href'], // what files should we import and compile
                 //includes: ['src/widgets/b4h-video/vendor/media.vimeo.js'],
@@ -25,7 +25,7 @@ module.exports = function (grunt) {
                     minify: true
                 },
                 files: [{
-                    cwd: 'src/application/form-fields',
+                    cwd: 'src',
                     src: '**/**.html',
                     options: {
                         interval: 500
@@ -42,11 +42,15 @@ module.exports = function (grunt) {
     // This is used to copy dist directory into bower_components for sandbox
     config.copy = {
         main: {
-            files: [{
-                expand: true,
-                src: 'dist/**',
-                dest: 'bower_components/hammer-dummy/'
-            }]
+            files: [
+                {
+                    expand: true,
+                    cwd: "src/",
+                    src: "**/**.html",
+                    dest: "dist/"
+                }
+
+            ]
         }
     };
 
@@ -77,7 +81,7 @@ module.exports = function (grunt) {
                 strictImports: true
             },
             files: {
-                'dist/main.css': 'src/main.less'
+                'dist/css/main.css': 'src/main.less'
             }
         }
     };
@@ -108,6 +112,6 @@ module.exports = function (grunt) {
     grunt.initConfig(config);
 
     // register tasks
-    grunt.registerTask('default', ['clean:dist', 'compile', 'less']); // , 'copy'
+    grunt.registerTask('default', ['clean:dist', 'compile', 'less']);//, 'copy']);
     grunt.registerTask('test', 'jasmine');
 };

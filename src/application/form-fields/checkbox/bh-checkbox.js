@@ -3,7 +3,7 @@ define('bhCheckbox', ['hb.directive'], function(directive) {
         return {
             scope: true,
             replace: true,
-            tplUrl: "checkbox/bh-checkbox.html",
+            tplUrl: "application/form-fields/checkbox/bh-checkbox.html",
             link: ['scope', 'el', 'alias', function(scope, el, alias) {
                 scope.field = scope.$eval(alias.value);
             }]
