@@ -146,6 +146,10 @@ $message .= '</body></html>';
 
 <h3 style="text-align:center">Thank you for filling out the Initial Consultation Questionnaire from my Website. I look forward to meeting with you soon!  Sincerely, Becky Jones</h3>
 
+<center>
+<a href="http://www.becky4health.com">Home</a>
+</center>
+
 
 
 <?php
