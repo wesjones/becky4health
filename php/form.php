@@ -40,11 +40,9 @@ if(isset($_POST['email'])) {
 
         !isset($_POST['email']) ||
 
-        !isset($_POST['phone']) ||
+        !isset($_POST['phone'])) {
 
-        !isset($_POST['gender'])) {
-
-        died('We are sorry, but there appears to be a problem with the form you submitted.');
+        died('We are sorry, but there appears to be too much missing information.');
 
     }
 
